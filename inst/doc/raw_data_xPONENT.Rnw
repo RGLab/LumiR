@@ -1,0 +1,33 @@
+%\VignetteIndexEntry{Extracting Raw bead level data using xPONENT}
+%\VignetteDepends{LumiR}
+%\VignetteKeywords{Luminex multiplex assay analysis}
+%\VignettePackage{LumiR}
+\documentclass[11pt]{article}
+\usepackage{Sweave}
+\usepackage{hyperref}
+\usepackage{underscore}
+\usepackage[hmargin=2cm, vmargin=3cm]{geometry}
+\SweaveOpts{keep.source=FALSE}
+
+\title{Extracting bead level data from xPONENT}
+\author{Renan Sauteraud\footnote{rsautera@fhcrc.org}}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section{General}
+Luminex's own software, xPONENT, outputs raw bead level data in csv (comma separated values) files.
+
+\section{xPONENT 1.x}
+In the first version of xPONENT, the filenames are \textbf{Run[001-096].csv}. Only these files should be included in the experiment folder, in a directory using the plate name.
+There is also a file \textbf{Output.csv} that should be removed from the experiment folder when using \texttt{LumiR}
+
+
+\section{xPONENT 3.x}
+In the latest versions, the filenames use the following format: \textbf{EXP_NAME_WELL_ID.csv}, with well_id being A1-H12. 
+Likewise, a file \textbf{EXP_NAME.csv} locaeted in the same folder should be removed prior to using \texttt{LumiR}
+
+
+\end{document}

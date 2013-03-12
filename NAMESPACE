@@ -1,0 +1,53 @@
+#drc
+importFrom(drc, drm, LL.5)
+
+#gdata
+importFrom(gdata, read.xls)
+
+#stats
+importFrom(stats, relevel)
+
+#XML
+importFrom(XML, xmlTreeParse, xmlRoot, xmlAttrs, xmlValue, xmlSApply, xmlSize, xmlName)
+
+#Tools
+importFrom(tools, file_ext, list_files_with_exts)
+
+#multcomp
+importFrom(multcomp, glht)
+
+#flowCore stuff
+importFrom(flowCore, read.FCS)
+importMethodsFrom(flowCore, pData, exprs)
+importClassesFrom(flowCore, flowFrame, flowSet)
+
+# Import stuff from Biobase
+importClassesFrom(Biobase,AnnotatedDataFrame)
+importMethodsFrom(Biobase,pData,featureData,fData,"exprs<-")
+
+# Import from reshape2
+# Melt is an S3 method
+
+#grid
+importFrom(grid, unit)
+
+#ggplot2
+importFrom(ggplot2, ggplot, geom_point, geom_line, geom_polygon, aes, aes_string, facet_wrap, facet_grid, 
+labs, element_blank, theme, theme_bw, scale_x_log10, scale_y_log10)
+
+#data.table
+#importFrom(data.table,"setkey","setkeyv")
+#importClassesFrom(data.table,data.table)
+
+
+######
+######
+exportMethods("show", "pData", "fData", "exprs", "concentration", "fit", "melt", "[",
+	"fData<-", "pData<-", "formula<-",
+	"geom_sc", "plot_layout")
+exportClasses("blum","slum")
+export("read.experiment", "slummarize", "results.conc.CSV", "results.curves.CSV")
+
+
+#dev export
+exportPattern("^.")

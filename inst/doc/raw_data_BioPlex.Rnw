@@ -1,0 +1,62 @@
+%\VignetteIndexEntry{Extracting Raw bead level data using BioPlex}
+%\VignetteDepends{LumiR}
+%\VignetteKeywords{Luminex multiplex assay analysis}
+%\VignettePackage{LumiR}
+\documentclass[11pt]{article}
+\usepackage{Sweave}
+\usepackage{hyperref}
+\usepackage{underscore}
+%\usepackage[hmargin=2cm, vmargin=3cm]{geometry}
+\SweaveOpts{keep.source=FALSE}
+
+\title{Extracting bead level data using Bio-Plex Manager}
+\author{Renan Sauteraud\footnote{rsautera@fhcrc.org}}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section{General}
+This acquisition software from BioRad uses a proprietary file format that cannot be read directly by \texttt{LumiR}. These files with a .rbx extension should be exported in XML in order to be read by \texttt{read.experiment}.
+
+
+\section{Saving the raw bead events}
+The first step is to make sure that the bead level information is saved by Bio-Plex.\\
+In the `Save As' dialog box, when saving protocols (extension .pbx) and results (.rbx), the compression mode must be disabled (default). Compression mode removes the raw bead event from the saved file in order to save space.
+
+
+\section{Exporting to XML}
+For Bio-Plex data, \texttt{LumiR} requires a single .xml file per plate.
+
+
+\subsection{Export a single file}
+To export an existing file into XML:
+\begin{itemize}
+\item Open a .rbx file
+\item File Menu > Document Export
+\item Choose \textbf{`Bio-Plex XML'}
+\item Choose The destination File
+\item Export
+\end{itemize}
+
+\subsection{Export as a routine}
+To export automatically at the end of a run:
+\begin{itemize}
+\item File Menu > Document Export Properties
+\item Choose \textbf{`Bio-Plex XML'}
+\item Check \textbf{`Use Folder'} in the Destination section and Choose the desired folder.
+\item OK
+\\
+\item Create or load a Protocol
+\item Advanced Settings Button
+\item Check \textbf{`Auto save after run'} and \textbf{`Auto XML export after run'}
+\item OK
+\end{itemize}
+
+
+\section{References}
+Bio-Plex Manager 6.1 User Guide:\\
+\htmladdnormallink{http://www.bio-rad.com/webroot/web/pdf/lsr/literature/10022815.pdf}{http://www.bio-rad.com/webroot/web/pdf/lsr/literature/10022815.pdf}
+
+\end{document}

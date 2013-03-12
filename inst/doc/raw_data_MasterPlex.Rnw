@@ -1,0 +1,56 @@
+%\VignetteIndexEntry{Extracting Raw bead level data using MasterPlex CT}
+%\VignetteDepends{LumiR}
+%\VignetteKeywords{Luminex multiplex assay analysis}
+%\VignettePackage{LumiR}
+\documentclass[11pt]{article}
+\usepackage{Sweave}
+\usepackage{hyperref}
+\usepackage{underscore}
+%\usepackage[hmargin=2cm, vmargin=3cm]{geometry}
+\SweaveOpts{keep.source=FALSE}
+
+\title{Extracting bead level data using MasterPlex CT}
+\author{Renan Sauteraud\footnote{rsautera@fhcrc.org}}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section{General}
+Classical statistical analysis of xMap, and notably MiraiBio's own analysis software, `MasterPlex \textbf{QT}', only uses the MFI. Therefore, saving the bead level information is set as an option in the acquisition software `MasterPlex CT' and needs to be enabled.
+
+
+\section{Saving the raw bead events}
+In order to save the bead level information, some options should be checked before starting the acquisition.
+\begin{itemize}
+\item In the \textbf{`Home'} tab
+\item Click the \underline{Setup} \textbf{`Modify'} button to open the `Acquisition Setup' dialog box.
+\item \textbf{`Setup'} tab
+\item[v1.0] In the Output section, check \textbf{`Save binary file also.'}
+\item[v1.2.0.7] In the Output section, check \textbf{`Save copy of output file in the output folder'} and \textbf{`Save copies of the individual well run files in the output folder'}
+\item Select a `Plate ID' and an `Output Folder'
+\item OK
+\end{itemize}
+
+
+\section{Locating the files}
+The files are located in the selected `Output Folder' and are based on the given `Plate ID'.\\
+
+\textbf{PLATE_ID.lxd} is the summary file used by the vendor's analysis software. It contains the calculated MFIs as well as information on the Setup of the acquisition and the analytes used.
+
+\textbf{PLATE_ID_WELL.lxb} are the binary files containing the raw bead events required to run \texttt{LumiR}.
+
+
+\section{Summary file}
+Unlike with other acquisition softwares, \texttt{LumiR} make use of the summary file produced by MasterPlex CT. If the .lxd file is provided, the package will extract the information regarding the matching of the bead ID with the analyte name. See the LumiR's User guide for more information. 
+
+
+\section{References}
+MasterPlex CT 1.0 User's Manual:\\
+\htmladdnormallink{http://www.miraibio.com/download-document/masterplex-ct-v1-user-s-manual.html}{http://www.miraibio.com/download-document/masterplex-ct-v1-user-s-manual.html}\\
+
+\noindent MasterPlex CT Tutorial:\\
+\htmladdnormallink{http://www.miraibio.com/download-document/tutorial-for-masterplex-ct.html}{http://www.miraibio.com/download-document/tutorial-for-masterplex-ct.html}
+
+\end{document}

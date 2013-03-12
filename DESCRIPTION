@@ -1,0 +1,13 @@
+Package: LumiR
+Type: Package
+Title: Luminex multiplex array manipulation and analysis
+Version: 0.1.1
+Author: Renan Saueraud <rsautera@fhcrc.org>
+Maintainer: Renan Sauteraud <rsautera@fhcrc.org>
+Depends: R(>= 2.15.0), Biobase, data.table
+Imports: flowCore, XML, gdata, tools, reshape2, ggplot2, drc, stats, multcomp
+Suggests:
+Description: Provides S4 structures and functions to deal with Luminex Bead Array Multiplex Assay data
+biocViews:
+License: Artistic-2.0
+Packaged:
