@@ -8,7 +8,7 @@ importFrom(gdata, read.xls)
 importFrom(stats, relevel)
 
 #XML
-importFrom(XML, xmlTreeParse, xmlRoot, xmlAttrs, xmlValue, xmlSApply, xmlSize, xmlName)
+importFrom(XML, xmlTreeParse, xmlRoot, xmlAttrs, xmlValue, xmlSApply, xmlApply, xmlSize, xmlName)
 
 #Tools
 importFrom(tools, file_ext, list_files_with_exts)

@@ -3,7 +3,14 @@ read.experiment<-function(path="./"){
   analyte.file<-list.files(path,pattern="analyte",full.names=TRUE)
   layout.file<-list.files(path,pattern="layout",full.names=TRUE)
   pheno.file<-list.files(path,pattern="phenotype",full.names=TRUE)
-  ##TODO: throw error if some files are missing and tell the user to use setup_template
+  if(length(analyte.file)==0){
+    stop("The analyte mapping file is missing.\nUse setup_templates to create it or include your own.")
+  } else if(length(layout.file)==0){
+    stop("The layout mapping file is missing.\nUse setup_templates to create it or include your own.")
+  } else if(length(pheno.file)==0){
+    stop("The phenotype mapping file is missing.\nUse setup_templates to create it or include your own.")
+  }
+
   plates<-list.dirs(path, recursive=FALSE)
 
   if(length(list_files_with_exts(plates[1], exts="lxb")>0)){
@@ -46,7 +53,8 @@ read.experiment<-function(path="./"){
     setkey(exprs,bid)
     setkey(mapping,bid)
     ## Join by bid
-    exprs<-exprs[mapping,]
+    #exprs<-exprs[mapping,]
+    exprs<-merge(exprs, mapping) #join creates NA
     # Re-order based on sample_id, then analyte
     setkeyv(exprs,c("sample_id","analyte"))
   
@@ -157,6 +165,7 @@ read.experiment<-function(path="./"){
   if(length(dt)!=2 | !all(colnames(dt)%in%c("analyte","bid"))) {
     stop("The analyte mapping file should be a csv file with two columns 'analyte' and 'bid'\n")
   } else {
+    dt[,bid:=as.numeric(bid)]
     featureData<-as(dt, "AnnotatedDataFrame")
   }
   return(featureData)
