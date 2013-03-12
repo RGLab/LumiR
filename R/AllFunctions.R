@@ -36,7 +36,10 @@ read.experiment<-function(path="./"){
     } else {
       exprs<-.read.exprs.xPonent(all.files)
     }
-    exprs<-merge(exprs, phenoDT, by=c("plate", "filename"))
+    # Do we need to do this?
+    setkeyv(phenoDT,c("plate","filename"))
+    setkeyv(exprs,c("plate","filename"))    
+    exprs<-exprs[phenoDT,]
   }
   setkey(exprs,sample_id)
 
@@ -84,7 +87,8 @@ read.experiment<-function(path="./"){
                     ss=tail(strsplit(x,"/")[[1]],2)
                     fname=ss[2]  # Get plate & fname now for the merge with sample_ID
                     plate=ss[1]
-                    dt[,plate:=plate][,filename:=fname]
+                    dt[,c("plate","filename"):=list(plate,fname)]
+                    #dt[,plate:=plate][,filename:=fname]
                     })
   ## rbind all data.tables
   ## The code could be improve when fread supports specifying the type for different columns
@@ -98,17 +102,28 @@ read.experiment<-function(path="./"){
   setnames(exprs,names(exprs),tolower(names(exprs)))
   bidGrep<-"id"
   bIdx<-grep(bidGrep, names(exprs))
-  name<-names(exprs)
+  name<-names(exprs)  
   name[bIdx]<-"bid"
   setnames(exprs, name)
   ## Sanitize the names
-  namesToGrep<-"id|cl|dbl|dd|rp1|plate|name|time|well"
-  cIdx<-grep(namesToGrep, names(exprs))
-  exprs<-exprs[,cIdx, with=FALSE]
+  #namesToGrep<-"id|cl|dbl|dd|rp1|plate|name|time|well"  
+  #cIdx<-grep(namesToGrep, names(exprs))
+  #exprs<-exprs[,cIdx, with=FALSE]
+  
+  # Remove the eventno
+  exprs<-exprs[,eventno:=NULL]  
+
+  # Standardize the names
+  setnames(exprs, "rp1", "fl")
+  setnames(exprs, "cl1", "fl.x")
+  setnames(exprs, "cl2", "fl.y")  
+  
   ## Change the data types
-  intToGrep<-"id|cl|rp1|time"
-  iIdx<-grep(intToGrep, names(exprs))
-  exprs<-cbind(exprs[,names(exprs)[-iIdx], with=FALSE] ,exprs[,lapply(.SD, as.numeric), .SDcols=names(exprs)[iIdx]])
+  # intToGrep<-"id|cl|rp1|time"
+  # iIdx<-grep(intToGrep, names(exprs))
+  
+  exprs<-exprs[,lapply(.SD, as.integer), by="plate,filename"]
+#  exprs<-cbind(exprs[,names(exprs)[-iIdx], with=FALSE] ,exprs[,lapply(.SD, as.numeric), .SDcols=names(exprs)[iIdx]])
   return(exprs)
 }
 
