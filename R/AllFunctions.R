@@ -3,12 +3,19 @@ read.experiment<-function(path="./"){
   analyte.file<-list.files(path,pattern="analyte",full.names=TRUE)
   layout.file<-list.files(path,pattern="layout",full.names=TRUE)
   pheno.file<-list.files(path,pattern="phenotype",full.names=TRUE)
+  missing_templates<-c()
   if(length(analyte.file)==0){
-    stop("The analyte mapping file is missing.\nUse setup_templates to create it or include your own.")
-  } else if(length(layout.file)==0){
-    stop("The layout mapping file is missing.\nUse setup_templates to create it or include your own.")
-  } else if(length(pheno.file)==0){
-    stop("The phenotype mapping file is missing.\nUse setup_templates to create it or include your own.")
+    missing_templates<-c(missing_templates, "analyte")
+  }
+  if(length(layout.file)==0){
+    missing_templates<-c(missing_templates, "layout")
+  }
+  if(length(pheno.file)==0){
+    missing_templates<-c(missing_templates, "phenotype")
+  }
+  if(!is.null(missing_templates)){
+    cat(paste(missing_templates, collapse=", "), "mapping file missing.\nSome information may be missing.\n")
+    template_list<-setup_templates(path, templates=missing_templates, write=FALSE)
   }
 
   plates<-list.dirs(path, recursive=FALSE)
@@ -24,15 +31,22 @@ read.experiment<-function(path="./"){
   all.files<-unlist(lapply(plates,list_files_with_exts,exts=typeExt)) 
 
   #pData
-  phenoData<-.read.phenotype(path=path, pheno.file=pheno.file)
+  if(length(pheno.file)>0){
+    phenoData<-.read.phenotype(path=path, pheno.file=pheno.file)
+  } else {
+    phenoData<-as(template_list[["pheno"]], "AnnotatedDataFrame")
+  }
 
   if(length(layout.file)>0){
     layout<-.read.layout(layout.file)
-    pData(phenoData)<-merge(pData(phenoData), layout, by="well")
+  } else {
+    layout<-template_list[["layout"]]
   }
+  pData(phenoData)<-merge(pData(phenoData), layout, by="well")
 
   #exprs
   if(type=="BIOPLEX"){
+    browser()
     phenoDT<-as.data.table(pData(phenoData))[,list(plate, well, sample_id)]
     exprs<-.read.exprs.bioplex(all.files)
     exprs<-merge(exprs, phenoDT, by=c("plate", "well"))
@@ -51,7 +65,11 @@ read.experiment<-function(path="./"){
   setkey(exprs,sample_id)
 
   #fData
+  if(length(analyte.file)>0){
     featureData<-.read.analyte(analyte.file)
+  } else {
+    featureData<-as(template_list[["analyte"]], "AnnotatedDataFrame")
+  }
     mapping<-as.data.table(featureData@data)
     setkey(exprs,bid)
     setkey(mapping,bid)
@@ -119,7 +137,7 @@ read.experiment<-function(path="./"){
   #exprs<-exprs[,cIdx, with=FALSE]
   
   # Remove the eventno
-  exprs<-exprs[,eventno:=NULL]  
+  suppressWarnings(exprs<-exprs[,eventno:=NULL]) 
 
   # Standardize the names
   setnames(exprs, "rp1", "fl")
@@ -158,13 +176,15 @@ read.experiment<-function(path="./"){
     root<-xmlRoot(xml)
     exprsFile<-xmlApply(root[["Wells"]], function(x){
       plate<-tail(strsplit(filename,"/")[[1]],2)[1]
+      fname<-tail(strsplit(filename,"/")[[1]],2)[2]
       well<-paste(LETTERS[as.numeric(xmlAttrs(x)["RowNo"])], xmlAttrs(x)["ColNo"], sep="")
       str<-xmlValue(x[["BeadEventData"]])
       ss<-unlist(strsplit(str, split="\n"))
       sss<-strsplit(ss, split=" ")
       dt<-as.data.table(do.call(rbind, lapply(sss, as.numeric)))
       setnames(dt, c("bid", "dd", "rp1", "cl1", "cl2"))
-      dt<-dt[,plate:=plate][,well:=well]
+      dt<-dt[,c("plate","filename","well"):=list(plate,fname,well)]
+      #dt<-dt[,plate:=plate][,well:=well]
       return(dt)
     })
     exprsList<-c(exprsList, exprsFile)
@@ -233,7 +253,9 @@ read.experiment<-function(path="./"){
   }
   mat<-do.call(rbind, ldf)
   colnames(mat)<-c("analyte", "bid")
-  featureData<-as(as.data.frame(mat), 'AnnotatedDataFrame')
+  df<-as.data.frame(mat)
+  df[,"bid"]<-as.numeric(levels(df$bid))[df$bid]
+  featureData<-as(df, 'AnnotatedDataFrame')
   return(featureData)
 }
 
@@ -326,8 +348,8 @@ results.curves.CSV<-function(object, file="./curves.csv"){
   return(invisible(toWrite))
 }
 
-setup_templates<-function(path, templates=c("layout", "analyte", "phenotype")){
-  
+setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), write=TRUE){
+  dfList<-list()
   analyte.file<-list.files(path,pattern="analyte",full.names=TRUE)
   layout.file<-list.files(path,pattern="layout",full.names=TRUE)
   pheno.file<-list.files(path,pattern="phenotype",full.names=TRUE)
@@ -370,10 +392,12 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype")){
         }
       }
       noExt<-gsub(paste0(".",typeExt), "", fNames)
-      sample_ID<-paste(noExt, plate, wells, sep="_")
-      phenotype<-data.frame(plate=plate,filename=fNames,well=wells, sample_ID=sample_ID)
-    
-      write.csv(phenotype, file=paste0(path,"phenotype.csv"), row.names=FALSE)
+      sample_id<-paste(noExt, plate, wells, sep="_")
+      phenotype.df<-data.frame(plate=plate,filename=fNames,well=wells, sample_id=sample_id)
+      dfList[["pheno"]]<-phenotype.df
+      if(write){
+        write.csv(phenotype.df, file=paste0(path,"phenotype.csv"), row.names=FALSE)
+      }
     }
   }
     
@@ -385,8 +409,11 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype")){
       wells<-paste0(LETTERS[1:8], rep(seq(1,12), each=8))
       sample_type<-rep("unknown", length(wells))
       concentration<-rep(NA, length(wells))
-      layout<-data.frame(well=wells, sample_type=sample_type, concentration=concentration)
-      write.csv(layout, file=paste0(path,"layout.csv"), row.names=FALSE)
+      layout.df<-data.frame(well=wells, sample_type=sample_type, concentration=concentration)
+      dfList[["layout"]]<-layout.df
+      if(write){
+        write.csv(layout.df, file=paste0(path,"layout.csv"), row.names=FALSE)
+      }
     }
   }
 
@@ -397,7 +424,11 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype")){
     } else {
       if(type=="LXB" & length(list_files_with_exts(path, exts="lxd")>0)){
           lxdFile<-list_files_with_exts(path, exts="lxd")
-          write.csv(pData(.read.lxd(lxdFile)), file=paste0(path, "analyte.csv"), row.names=FALSE)
+          analyte.df<-pData(.read.lxd(lxdFile)) 
+        dfList[["analyte"]]<-analyte.df
+        if(write){
+          write.csv(analyte.df, file=paste0(path, "analyte.csv"), row.names=FALSE)
+        }
       } else{
         if(type=="XPONENT"){  BIDs<-.getXponentBID(all.files[1])
         } else if(type=="LXB"){ BIDs<-.getLXBBID(all.files[1])
@@ -405,10 +436,15 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype")){
         }
         BIDs<-BIDs[BIDs!=0]
         analyte<-paste0(rep("unknown", length(BIDs)), BIDs)
-        write.csv(data.frame(bid=BIDs, analyte=analyte), file=paste0(path,"analyte.csv"), row.names=FALSE)
+        analye.df<-data.frame(bid=BIDs, analyte=analyte)
+        dfList[["analyte"]]<-analyte.df
+        if(write){
+          write.csv(analyte.df, file=paste0(path,"analyte.csv"), row.names=FALSE)
+        }
       }
     }
   }
+  return(invisible(dfList))
 }
 
 .getXponentBID<-function(firstFile){
