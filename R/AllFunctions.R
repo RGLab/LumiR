@@ -266,7 +266,7 @@ slummarize<-function(from,type="MFI"){
   dt<-dt[,as.double(median(fl)), by="sample_id,analyte"]
   setnames(dt, c("sample_id", "analyte", type))
   setkey(dt, sample_id)
-  mat<-matrix(dt[,MFI], ncol=length(levels(dt[,sample_id])), dimnames=list(levels(dt[,analyte]),levels(dt[,sample_id])))
+  mat<-matrix(dt[,MFI], ncol=length(levels(dt[,sample_id])), dimnames=list(unique(dt[,analyte]),levels(dt[,sample_id])))
   #mat<-lapply(exprs(from),sapply,median)
   #mat<-t(do.call("rbind",mat))
   mfiSet<-new("slum", formula=as.formula("log(mfi) ~ c + (d - c)/(1 + exp(b * (log(x) - log(e))))^f"), inv=function(y, parmVec){exp(log(((parmVec[3] - parmVec[2])/(log(y) - parmVec[2]))^(1/parmVec[5]) - 1)/parmVec[1] + log(parmVec[4]))}
@@ -290,7 +290,8 @@ slummarize<-function(from,type="MFI"){
   inv<-mfiSet@inv
   for(i in 1:nrow(mat)){
     for(j in 1:ncol(mat)){
-      conc<-c(conc, mfiSet@inv(mat[[i,j]], coefs[coefs$plate==strsplit(colnames(mat)[j], "_")[[1]][2] & coefs$analyte==rownames(mat)[i], 3:7]))
+      conc<-c(conc, mfiSet@inv(mat[[i,j]],
+               coefs[coefs$plate==tail(strsplit(colnames(mat)[j], "_")[[1]],2)[1] & coefs$analyte==rownames(mat)[i], 3:7]))
     }
   }
   concMat<-matrix(conc, ncol=ncol(mat))
@@ -437,7 +438,7 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
         }
         BIDs<-BIDs[BIDs!=0]
         analyte<-paste0(rep("unknown", length(BIDs)), BIDs)
-        analye.df<-data.frame(bid=BIDs, analyte=analyte)
+        analyte.df<-data.frame(bid=BIDs, analyte=analyte)
         dfList[["analyte"]]<-analyte.df
         if(write){
           write.csv(analyte.df, file=paste0(path,"analyte.csv"), row.names=FALSE)
