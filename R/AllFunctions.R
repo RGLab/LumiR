@@ -46,7 +46,6 @@ read.experiment<-function(path="./"){
 
   #exprs
   if(type=="BIOPLEX"){
-    browser()
     phenoDT<-as.data.table(pData(phenoData))[,list(plate, well, sample_id)]
     exprs<-.read.exprs.bioplex(all.files)
     exprs<-merge(exprs, phenoDT, by=c("plate", "well"))
@@ -84,7 +83,8 @@ read.experiment<-function(path="./"){
 }
 
 .getXponentWellsID<-function(filenames){
-  filenames<-gsub(".csv", "", filenames)
+  filenames<-gsub(".csv", "", filenames, fixed=TRUE)
+  filenames<-unlist(lapply(filenames, function(x)tail(strsplit(x,"/")[[1]],1)))
   if(length(grep("Run", filenames))==0){#XPONENT v3.
     wellsID<-unlist(lapply(strsplit(filenames, split="_"), tail, 1))
   } else{#XPONENT v1.
@@ -113,7 +113,8 @@ read.experiment<-function(path="./"){
                     ss=tail(strsplit(x,"/")[[1]],2)
                     fname=ss[2]  # Get plate & fname now for the merge with sample_ID
                     plate=ss[1]
-                    dt[,c("plate","filename"):=list(plate,fname)]
+                    wname=.getXponentWellsID(fname)
+                    dt[,c("plate","filename","well"):=list(plate,fname,wname)]
                     #dt[,plate:=plate][,filename:=fname]
                     })
   ## rbind all data.tables
@@ -124,7 +125,6 @@ read.experiment<-function(path="./"){
 }
 
 .sanitize.exprs<-function(exprs){
-  ## Lower case for all
   setnames(exprs,names(exprs),tolower(names(exprs)))
   bidGrep<-"id"
   bIdx<-grep(bidGrep, names(exprs))
@@ -148,13 +148,14 @@ read.experiment<-function(path="./"){
   # intToGrep<-"id|cl|rp1|time"
   # iIdx<-grep(intToGrep, names(exprs))
   
-  exprs<-exprs[,lapply(.SD, as.integer), by="plate,filename"]
+  exprs<-exprs[,lapply(.SD, as.integer), by="plate,filename,well"]
 #  exprs<-cbind(exprs[,names(exprs)[-iIdx], with=FALSE] ,exprs[,lapply(.SD, as.numeric), .SDcols=names(exprs)[iIdx]])
   return(exprs)
 }
 
 .read.exprs.lxb<-function(filenames){
   nFiles<-length(filenames)
+  wNames<-.getLXBWellsID(filenames)
   exprsList<-vector('list', nFiles)
   for(fileIdx in 1:nFiles){
     suppressWarnings(lxb<-read.FCS(filenames[[fileIdx]]))
@@ -162,7 +163,7 @@ read.experiment<-function(path="./"){
     fname<-ss[2]  # Get plate & fname now for the merge with sample_ID
     plate<-ss[1]
     asdt<-as.data.table(exprs(lxb))
-    asdt[,plate:=plate][,filename:=fname]
+    asdt[,c("plate","filename","well"):=list(plate,fname,wNames[fileIdx])]
     exprsList[[fileIdx]]<-asdt
   }
   exprs<-rbindlist(exprsList)
@@ -262,7 +263,7 @@ read.experiment<-function(path="./"){
 ### Summarize to MFIs and add standardCurves informations
 slummarize<-function(from,type="MFI"){
   dt<-exprs(from)
-  dt<-dt[,as.double(median(rp1)), by="sample_id,analyte"]
+  dt<-dt[,as.double(median(fl)), by="sample_id,analyte"]
   setnames(dt, c("sample_id", "analyte", type))
   setkey(dt, sample_id)
   mat<-matrix(dt[,MFI], ncol=length(levels(dt[,sample_id])), dimnames=list(levels(dt[,analyte]),levels(dt[,sample_id])))
