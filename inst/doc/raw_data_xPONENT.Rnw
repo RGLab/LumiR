@@ -20,14 +20,46 @@
 \section{General}
 Luminex's own software, xPONENT, outputs raw bead level data in csv (comma separated values) files.
 
-\section{xPONENT 1.x}
-In the first version of xPONENT, the filenames are \textbf{Run[001-096].csv}. Only these files should be included in the experiment folder, in a directory using the plate name.
-There is also a file \textbf{Output.csv} that should be removed from the experiment folder when using \texttt{LumiR}
+
+\section{Saving the raw bead events}
+\subsection{Documentation}
+From xPONENT's documentation:
+\begin{quote}
+One can obtain the FI for each bead within each sample from a so-called rCSV file. To configure your instrument to automatically generate the rCSV files, simply go to the Admin page/CSV Options Tab and make sure the bottom-most checkbox is checked. If checked and a run is performed, the rCSV files will be located under:
+
+C:/docs\&settings/all users/application data/Luminex/xponent/batchXXX_rcsv 
+\end{quote}
+
+\subsection{HowTo}
+To save the individual bead fluorescence:
+\begin{itemize}
+\item Admin section
+\item CSV Options Tab
+\item Check \textbf{`Automatically export results CSV file when batch is complete'}
+\item Check \textbf{`Include Advanced Statistics'}
+\item Choose the destination folder in the `CSV File Export Folder' field. 
+\item Save
+\end{itemize}
+
+The files will be located in the destination folder, in a directory \textbf{EXP_NAME_rcsv}.
 
 
-\section{xPONENT 3.x}
+\subsection{xPONENT 1.x}
+In the first version of xPONENT, the filenames are \textbf{Run[001-096].csv}.
+%Only these files should be included in the experiment folder, in a directory using the plate name.
+%There is also a file \textbf{Output.csv} that should be removed from the experiment folder when using \texttt{LumiR}
+
+
+\subsection{xPONENT 3.x}
 In the latest versions, the filenames use the following format: \textbf{EXP_NAME_WELL_ID.csv}, with well_id being A1-H12. 
-Likewise, a file \textbf{EXP_NAME.csv} locaeted in the same folder should be removed prior to using \texttt{LumiR}
+%Likewise, a file \textbf{EXP_NAME.csv} locaeted in the same folder should be removed prior to using \texttt{LumiR}
 
+
+\section{References}
+xPONENT 3.1 Software Manual:\\
+\htmladdnormallink{http://www.luminexcorp.com/prod/groups/public/documents/lmnxcorp/89-00002-00-202.pdf}{http://www.luminexcorp.com/prod/groups/public/documents/lmnxcorp/89-00002-00-202.pdf}\\
+\\
+Obtaining Fl of each bead within each sample:\\
+\htmladdnormallink{http://www.luminexcorp.com/blog/its-all-about-the-stats/}{http://www.luminexcorp.com/blog/its-all-about-the-stats/}
 
 \end{document}

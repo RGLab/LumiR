@@ -56,8 +56,6 @@ read.experiment<-function(path="./"){
   # Join with phenoData so we can add the sample_id to the exprs
   # Do we need to do this? Added well to make keys unique in phenoDT
   #setkeyv(phenoDT,c("plate","filename"))
-  #setkeyv(exprs,c("plate","filename"))    
-  #setkeyv(phenoDT,plate,filename,well)
   setkey(exprs,plate,filename,well)    
   exprs<-exprs[phenoDT,]
   setkey(exprs,sample_id)
@@ -106,22 +104,6 @@ read.experiment<-function(path="./"){
   return(wellsID)
 }
 
-.read.exprs.xPonent<-function(filenames){
-  exprsList<-lapply(filenames, function(x){dt<-fread(x);
-                    ss=tail(strsplit(x,"/")[[1]],2)
-                    fname=ss[2]  # Get plate & fname now for the merge with sample_ID
-                    plate=ss[1]
-                    wname=.getXponentWellsID(fname)
-                    dt[,c("plate","filename","well"):=list(plate,fname,wname)]
-                    #dt[,plate:=plate][,filename:=fname]
-                    })
-  ## rbind all data.tables
-  ## The code could be improve when fread supports specifying the type for different columns
-  exprs<-rbindlist(exprsList)
-  exprs<-.sanitize.exprs(exprs)
-  return(exprs)
-}
-
 .sanitize.exprs<-function(exprs){
   setnames(exprs,names(exprs),tolower(names(exprs)))
   bidGrep<-"id"
@@ -129,25 +111,29 @@ read.experiment<-function(path="./"){
   name<-names(exprs)  
   name[bIdx]<-"bid"
   setnames(exprs, name)
-  ## Sanitize the names
-  #namesToGrep<-"id|cl|dbl|dd|rp1|plate|name|time|well"  
-  #cIdx<-grep(namesToGrep, names(exprs))
-  #exprs<-exprs[,cIdx, with=FALSE]
-  
   # Remove the eventno
   suppressWarnings(exprs<-exprs[,eventno:=NULL]) 
-
   # Standardize the names
   setnames(exprs, "rp1", "fl")
   setnames(exprs, "cl1", "fl.x")
   setnames(exprs, "cl2", "fl.y")  
-  
-  ## Change the data types
-  # intToGrep<-"id|cl|rp1|time"
-  # iIdx<-grep(intToGrep, names(exprs))
-  
+
   exprs<-exprs[,lapply(.SD, as.integer), by="plate,filename,well"]
-#  exprs<-cbind(exprs[,names(exprs)[-iIdx], with=FALSE] ,exprs[,lapply(.SD, as.numeric), .SDcols=names(exprs)[iIdx]])
+  return(exprs)
+}
+
+.read.exprs.xPonent<-function(filenames){
+  exprsList<-lapply(filenames, function(x){dt<-fread(x);
+                    ss=tail(strsplit(x,"/")[[1]],2)
+                    fname=ss[2]  # Get plate & fname now for the merge with sample_ID
+                    plate=ss[1]
+                    wname=.getXponentWellsID(fname)
+                    dt[,c("plate","filename","well"):=list(plate,fname,wname)]
+                    })
+  ## rbind all data.tables
+  ## The code could be improve when fread supports specifying the type for different columns
+  exprs<-rbindlist(exprsList)
+  exprs<-.sanitize.exprs(exprs)
   return(exprs)
 }
 
@@ -183,7 +169,6 @@ read.experiment<-function(path="./"){
       dt<-as.data.table(do.call(rbind, lapply(sss, as.numeric)))
       setnames(dt, c("bid", "dd", "rp1", "cl1", "cl2"))
       dt<-dt[,c("plate","filename","well"):=list(plate,fname,well)]
-      #dt<-dt[,plate:=plate][,well:=well]
       return(dt)
     })
     exprsList<-c(exprsList, exprsFile)
