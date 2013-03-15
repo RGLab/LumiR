@@ -97,11 +97,6 @@ setMethod("melt","slum",
           })
 
 #--------
-# formula
-# getter
-#setGeneric("formula", function(object, ...) standardGeneric("formula"))
-#setMethod("formula", "slum", function(object){return(object@formula)})
-#--------
 # formula<-
 # setter
 setGeneric("formula<-", function(object, value, ...) standardGeneric("formula<-"))
@@ -135,7 +130,6 @@ setMethod("geom_sc", "slum",
   # Concentration from min to max
   x<-exp(seq(0,log(max(df$concentration)),length.out=n))
   coef<-as.numeric(df[1,c('b','c','d','e','f')])
-  # Should be able to parse this automatically
   b<-coef[1];c<-coef[2];d<-coef[3];e<-coef[4];f<-coef[5];
   # Evalulate formula
   mfi<-eval(parse(text=formula[3]))

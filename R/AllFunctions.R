@@ -212,7 +212,8 @@ slummarize<-function(from,type="MFI"){
   for(i in 1:nrow(mat)){
     for(j in 1:ncol(mat)){
       conc<-c(conc, mfiSet@inv(mat[[i,j]],
-               coefs[coefs$plate==tail(strsplit(colnames(mat)[j], "_")[[1]],2)[1] & coefs$analyte==rownames(mat)[i], 3:7]))
+               #coefs[coefs$plate==tail(strsplit(colnames(mat)[j], "_")[[1]],2)[1] & coefs$analyte==rownames(mat)[i], 3:7]))
+               coefs[coefs$plate==pData(mfiSet)[pData(mfiSet)$sample_id==colnames(mat)[j], "plate"] & coefs$analyte==rownames(mat)[i], 3:7]))
     }
   }
   concMat<-matrix(conc, ncol=ncol(mat))
