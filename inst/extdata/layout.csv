@@ -1,5 +1,5 @@
 "well","sample_type","concentration"
-"A1","control",NA
+"A1","unknown",NA
 "B1","unknown",NA
 "C1","unknown",NA
 "D1","unknown",NA
@@ -7,7 +7,7 @@
 "F1","unknown",NA
 "G1","unknown",NA
 "H1","unknown",NA
-"A2","control",NA
+"A2","unknown",NA
 "B2","unknown",NA
 "C2","unknown",NA
 "D2","unknown",NA
@@ -15,7 +15,7 @@
 "F2","unknown",NA
 "G2","unknown",NA
 "H2","unknown",NA
-"A3","control",NA
+"A3","unknown",NA
 "B3","unknown",NA
 "C3","unknown",NA
 "D3","unknown",NA
@@ -23,7 +23,7 @@
 "F3","unknown",NA
 "G3","unknown",NA
 "H3","unknown",NA
-"A4","control",NA
+"A4","unknown",NA
 "B4","unknown",NA
 "C4","unknown",NA
 "D4","unknown",NA
@@ -31,9 +31,9 @@
 "F4","unknown",NA
 "G4","unknown",NA
 "H4","unknown",NA
-"A5","control",NA
-"B5","unknown",
-"C5","unknown",
+"A5","unknown",NA
+"B5","unknown",NA
+"C5","unknown",NA
 "D5","unknown",NA
 "E5","unknown",NA
 "F5","unknown",NA
@@ -44,9 +44,9 @@
 "C6","unknown",NA
 "D6","unknown",NA
 "E6","unknown",NA
-"F6","control",NA
-"G6","control",NA
-"H6","control",NA
+"F6","unknown",NA
+"G6","unknown",NA
+"H6","unknown",NA
 "A7","unknown",NA
 "B7","unknown",NA
 "C7","unknown",NA
@@ -78,7 +78,7 @@
 "E10","standard",19.53
 "F10","standard",4.88
 "G10","standard",1.22
-"H10","background"0
+"H10","background",0
 "A11","standard",5000
 "B11","standard",1250
 "C11","standard",312.5
@@ -86,4 +86,12 @@
 "E11","standard",19.53
 "F11","standard",4.88
 "G11","standard",1.22
-"H11","background"0
+"H11","background",0
+"A12","unknown",NA
+"B12","unknown",NA
+"C12","unknown",NA
+"D12","unknown",NA
+"E12","unknown",NA
+"F12","unknown",NA
+"G12","unknown",NA
+"H12","unknown",NA

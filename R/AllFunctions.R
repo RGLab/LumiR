@@ -101,9 +101,11 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
 }
 
 .getXponentBID<-function(firstFile){
-  sLine<-grep("[Ee]vent[Nn]o", readLines(firstFile[1], n=5))-1
-  con<-read.csv(firstFile, skip=sLine, header=TRUE);
-  BIDs<-sort(as.numeric(unique(con[,2])))
+  #sLine<-grep("[Ee]vent[Nn]o", readLines(firstFile[1], n=5))-1
+  #con<-read.csv(firstFile, skip=sLine, header=TRUE);
+  #BIDs<-sort(as.numeric(unique(con[,2])))
+  dt<-fread(firstFile)
+  BIDs<-unique(sort(as.numeric(dt[[colnames(dt)[2]]])))
   return(BIDs)
 }
 .getLXBBID<-function(firstFile){
