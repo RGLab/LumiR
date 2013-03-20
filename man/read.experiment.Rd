@@ -4,7 +4,7 @@
 \title{Read experiment folder}
 
 \description{
-Parse the root folder of an experiment to store information in a \code{blum} object.
+Parse the root folder of an experiment to store bead level information in a \code{blum} object.
 }
 
 \usage{

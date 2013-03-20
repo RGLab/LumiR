@@ -141,13 +141,20 @@ Here, we use colors to plot the sample\_type for each well of plate1.
 This method uses \texttt{ggplot2}'s \texttt{geom\_polygon} function, therefore, the same arguments are valid here.
 
 
-\section{bsum}
+\section{slum}
 The second step is to summarize the data using \texttt{slummarize}. It returns an object of class \texttt{slum}. It is used for `classic' standardization methods as it only contains the median fluorescence intensity (MFI) for each well and not the raw bead events.
 For this step, the package needs a user provided `layout.csv' file with at least the location and expected concentration of the standards. The file provided in the extdata folder of this package is an example of such file.
 
 <<slummarize>>=
 sl<-slummarize(bl)
 @
+
+In the expression slot, the bead events are replaced by the MFI for each analyte/sample. Additionaly, the concentration calculated from each MFI is stored in the object. For a quick view of the concentration of each analyte in each well:
+
+<<access-conc, results=hide>>=
+concentration(sl)
+@
+
 
 Since \texttt{slum} objects retain the phenotype information from the mapping file, they may be used as first argument in \texttt{plot\_layout}.
 
