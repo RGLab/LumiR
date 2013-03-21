@@ -8,12 +8,13 @@ Creates mapping file to be parsed in `read.experiment'.
 }
 
 \usage{
-setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"))
+setup_templates(path, templates=c("layout", "analyte", "phenotype"), write=TRUE)
 }
 
 \arguments{
 \item{path}{A \code{character}. The pathname of an experiment folder. This is the same path as the one that will be used in \code{read.experiment}.}
 \item{templates}{A \code{character} vector. The mapping files to create.}
+\item{write}{A \code{logical}. If set tot FALSE, the files will not be written on disk.}
 }
 
 \value{
@@ -21,7 +22,7 @@ An invisible list of \code{data.frame} to be used internally by \code{read.exper
 }
 
 \note{
-By if a mapping file specified by the templates list already exists, the function will not overwrite the existing file(s). The files should be removed before running the function in order to create new mapping file.
+If a mapping file specified by the templates list already exists, the function will not overwrite the existing file(s). The files should be removed before running the function in order to create new mapping file.
 }
 
 \author{Renan Sauteraud}

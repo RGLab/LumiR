@@ -41,28 +41,28 @@ setMethod("concentration", "slum", function(object){
   return(assayData(object)$concentration)
 })
 
-# Subset method to subset a la eSet
-setMethod("[","blum",
-          function(x,i,j,..., drop=FALSE)
-          {
-            if(!missing(i))
-            {
-              #Subset the samples
-              bdata<-exprs(x)[j]
-              #Subset the analytes
-              bdata<-lapply(exprs(x),"[",i)              
-            }
-            else
-            {
-              #Subset the analytes         
-              bdata<-lapply(exprs(x),"[",i)              
-            }            
-            newSet<-new('blum'
-                        ,exprs=bdata
-                        ,phenoData=x@phenoData[j,]
-                        ,featureData=x@featureData[i,])
-            newSet            
-          })
+## Subset method to subset a la eSet
+#setMethod("[","blum",
+#          function(x,i,j,..., drop=FALSE)
+#          {
+#            if(!missing(i))
+#            {
+#              #Subset the samples
+#              bdata<-exprs(x)[j]
+#              #Subset the analytes
+#              bdata<-lapply(exprs(x),"[",i)              
+#            }
+#            else
+#            {
+#              #Subset the analytes         
+#              bdata<-lapply(exprs(x),"[",i)              
+#            }            
+#            newSet<-new('blum'
+#                        ,exprs=bdata
+#                        ,phenoData=x@phenoData[j,]
+#                        ,featureData=x@featureData[i,])
+#            newSet            
+#          })
 
 # I add the pheno and feature information by default we could add an option for this
 # Need to sort this out with reshape2
@@ -99,8 +99,10 @@ setMethod("melt","slum",
 #--------
 # formula<-
 # setter
-setGeneric("formula<-", function(object, value, ...) standardGeneric("formula<-"))
-setReplaceMethod("formula", "slum", function(object, value){object@formula<-value; object})
+setGeneric("formula<-", function(object, value) standardGeneric("formula<-"))
+setReplaceMethod("formula", signature("slum", "formula"), function(object, value){
+  object@formula<-value
+  return(object)})
 
 
 setGeneric("geom_sc", function(object, n=100, data = NULL, mapping = aes(x=concentration, y=mfi),
