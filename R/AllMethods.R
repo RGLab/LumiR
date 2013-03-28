@@ -29,6 +29,9 @@ setReplaceMethod("fData", signature("blum", "data.frame"), function(object, valu
 setMethod("exprs", "blum", function(object){
   return(object@exprs)
 })
+setReplaceMethod("exprs", signature("blum", "data.table"), function(object, value){
+  object@exprs<-value
+  return(object)})
 
 
 # fit accessor for standard curve fitting information
@@ -193,4 +196,65 @@ setMethod("getCoeffs", "slum", function(object, plate=NULL, analyte=NULL){
   return(df)
   #return(as.numeric(df))
 })
+##
+##setMethod("merge", "blum", "blum", function(obj1, obj2, ...){#mb sort them first
+####pData
+###check that all the number of well is =
+###check that control location is identical
+###basically, everything should be identical
+###add a XP col
+###rbind pData
+####fData
+###check that the analytes are the same in both XP and that they match the same bid
+####exprs
+###just rbind them and add a exp column
+##
+##
+##  spd1<-pData(obj1)[,!names(pData(obj1))%in%c("plate", "filename", "sample_id")]
+##  spd1<-spd1[with(spd1, order(well)),]  # Same wells on =/= plates should be identical
+##  spd2<-pData(obj2)[,!names(pData(obj2))%in%c("plate", "filename", "sample_id")]
+##  spd2<-spd2[with(spd2, order(well)),]  # Same wells on =/= plates should be identical
+##  if(nrow(spd1)!=nrow(spd2)){
+##    stop("The phenoData is different in the two objects to merge.")
+##  }
+##  if(any(spd1!=spd2, na.rm=TRUE)){
+##    stop("The phenoData is different in the two objects to merge.")
+##  }
+##  if(!all(fData(obj1)==fData(obj2))){#mb sort them first
+##    stop("The analytes are different in the two objects to merge.")
+##  }
+##  
+##  return(0)
+##})
+##
+#make a meth
+setGeneric("set_center", function(object, center_name) standardGeneric("set_center"))
+setMethod("set_center", signature=c("blum", "character"), function(object, center_name){
+  pd<-pData(object)
+  dt<-data.table(exprs(object))
+  if("center"%in%colnames(pd)){
+    pd$plate<-gsub(paste0(pd$center[1],"_"), "",  pd$plate)
+    dt[,plate:=gsub(paste0(center[1],"_"), "", plate)]
+  }# else{
+    #pd$plate<-paste(center_name, pd$plate, sep="_")
+    #dt[,plate:=paste(center_name, plate, sep="_")]
+  #}
+  pd$center<-rep(center_name, nrow(pd))
+  pd$plate<-paste(center_name, pd$plate, sep="_")
+  pd$sample_id<-paste(sapply(strsplit(as.character(pd$filename), split="\\."), function(x){x[-length(x)]}),
+        pd$plate, pd$well, sep="_")
+
+  dt[,center:=rep(center_name, nrow(dt))]
+  dt[,plate:=paste(center_name, plate, sep="_")]
+  dt[,sample_id:=paste(sapply(strsplit(filename, split="\\."), function(x){x[-length(x)]}), plate, well, sep="_")]
+  pData(object)<-pd
+  exprs(object)<-dt
+  return(object)
+})
+
+#setMethod("set_center", "slum", function(object, center){
+  #pData(object)$center<-rep(center, nrow(pData(object)))
+  #return(object)
+#})
+
 
