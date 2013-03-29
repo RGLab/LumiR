@@ -227,6 +227,25 @@ setMethod("getCoeffs", "slum", function(object, plate=NULL, analyte=NULL){
 ##  return(0)
 ##})
 ##
+
+setMethod("merge", signature=c("blum", "blum"), function(x, y, ...){#obj1, obj2, ...){
+  if(missing(y)){
+    return(x)
+  }
+  list_obj<-c(list(x, y), list(...))
+  if(is.mergeable(list_obj)){
+    phenoData<-as(do.call("rbind", lapply(list_obj, pData)), "AnnotatedDataFrame")
+    featureData<-x@featureData
+    exprs<-do.call("rbind", lapply(list_obj, exprs)) # Mighy be tricky if colnames are =/=
+    ret<-new("blum", phenoData=phenoData, featureData=featureData, exprs=exprs)
+    return(ret)
+  }
+})
+
+is.mergeable<-function(obj1, obj2, ...){
+  return(TRUE)
+}
+
 #make a meth
 setGeneric("set_center", function(object, center_name) standardGeneric("set_center"))
 setMethod("set_center", signature=c("blum", "character"), function(object, center_name){
@@ -235,10 +254,7 @@ setMethod("set_center", signature=c("blum", "character"), function(object, cente
   if("center"%in%colnames(pd)){
     pd$plate<-gsub(paste0(pd$center[1],"_"), "",  pd$plate)
     dt[,plate:=gsub(paste0(center[1],"_"), "", plate)]
-  }# else{
-    #pd$plate<-paste(center_name, pd$plate, sep="_")
-    #dt[,plate:=paste(center_name, plate, sep="_")]
-  #}
+  }
   pd$center<-rep(center_name, nrow(pd))
   pd$plate<-paste(center_name, pd$plate, sep="_")
   pd$sample_id<-paste(sapply(strsplit(as.character(pd$filename), split="\\."), function(x){x[-length(x)]}),
@@ -252,9 +268,28 @@ setMethod("set_center", signature=c("blum", "character"), function(object, cente
   return(object)
 })
 
-#setMethod("set_center", "slum", function(object, center){
-  #pData(object)$center<-rep(center, nrow(pData(object)))
-  #return(object)
-#})
+#For slum: pData, exprs and add cols to conc matrix to modify
+
+setMethod("set_center", signature=c("slum", "character"), function(object, center_name){
+  pd<-pData(object)
+  cNames<-colnames(exprs(object))
+  if("center"%in%colnames(pd)){
+    cNames<-gsub(pd$center[1], center_name, cNames)
+    pd$plate<-gsub(pd$center[1], center_name,  pd$plate)
+    pd$sample_id<-paste(sapply(strsplit(as.character(pd$filename), split="\\."), function(x){x[-length(x)]}),
+        pd$plate, pd$well, sep="_")
+  } else{
+    for(plate in unique(pd$plate)){
+      cNames<-gsub(paste0(plate,"_"), paste(center_name, plate, sep="_"), cNames)
+    }
+    pd$plate<-paste(center_name, pd$plate, sep="_")
+    pd$sample_id<-paste(sapply(strsplit(as.character(pd$filename), split="\\."), function(x){x[-length(x)]}),
+        pd$plate, pd$well, sep="_")
+  }
+  colnames(exprs(object))<-cNames
+  pd$center<-rep(center_name, nrow(pd))
+  pData(object)<-pd
+  return(object)
+})
 
 
