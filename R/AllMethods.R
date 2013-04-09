@@ -8,6 +8,30 @@ setMethod("show", "blum", function(object){
   cat("And slots:", names(getSlots("blum")),"\n")
 })
 
+# head method:
+#   To get an idea of what is in each slot
+setMethod("head", signature=c("blum"), function(x){
+  cat("@featureData:\n")
+  print(head(fData(x)))
+  cat("@phenoData:\n")
+  print(head(pData(x)))
+  cat("@exprs:\n")
+  print(exprs(x))
+})
+
+setMethod("head", signature=c("slum"), function(x){
+  cat("@formula:\n")
+  print(formula(x))
+  cat("@featureData:\n")
+  print(head(fData(x)))
+  cat("@fit:\n")
+  print(head(fit(x)))
+  cat("@phenoData:\n")
+  print(head(pData(x)))
+  cat("@exprs:\n")
+  print(exprs(x)[1:5, 1:4])
+})
+
 # pData method:
 #   phenoData accessor
 setMethod("pData", "blum", function(object){
@@ -196,37 +220,6 @@ setMethod("getCoeffs", "slum", function(object, plate=NULL, analyte=NULL){
   return(df)
   #return(as.numeric(df))
 })
-##
-##setMethod("merge", "blum", "blum", function(obj1, obj2, ...){#mb sort them first
-####pData
-###check that all the number of well is =
-###check that control location is identical
-###basically, everything should be identical
-###add a XP col
-###rbind pData
-####fData
-###check that the analytes are the same in both XP and that they match the same bid
-####exprs
-###just rbind them and add a exp column
-##
-##
-##  spd1<-pData(obj1)[,!names(pData(obj1))%in%c("plate", "filename", "sample_id")]
-##  spd1<-spd1[with(spd1, order(well)),]  # Same wells on =/= plates should be identical
-##  spd2<-pData(obj2)[,!names(pData(obj2))%in%c("plate", "filename", "sample_id")]
-##  spd2<-spd2[with(spd2, order(well)),]  # Same wells on =/= plates should be identical
-##  if(nrow(spd1)!=nrow(spd2)){
-##    stop("The phenoData is different in the two objects to merge.")
-##  }
-##  if(any(spd1!=spd2, na.rm=TRUE)){
-##    stop("The phenoData is different in the two objects to merge.")
-##  }
-##  if(!all(fData(obj1)==fData(obj2))){#mb sort them first
-##    stop("The analytes are different in the two objects to merge.")
-##  }
-##  
-##  return(0)
-##})
-##
 
 setMethod("merge", signature=c("blum", "blum"), function(x, y, ...){#obj1, obj2, ...){
   if(missing(y)){
@@ -242,11 +235,32 @@ setMethod("merge", signature=c("blum", "blum"), function(x, y, ...){#obj1, obj2,
   }
 })
 
-is.mergeable<-function(obj1, obj2, ...){
+is.mergeable<-function(list_obj){
+  # Plate names must be unique in the merged object
+  allPlates<-unlist(lapply(list_obj, function(x){ unique(pData(x)$plate) }))
+  if(length(unique(allPlates))!=length(allPlates)){
+    duplates<-allPlates[duplicated(allPlates)]
+    stop("Some plates are not unique. Merging an object with itself?")
+  }
+  # fData are the same 
+  fds<-lapply(list_obj, function(x){ fData(x) })
+  fds<-lapply(fds, function(x){ x[with(x, order(bid)),] }) # sort by bid
+  fdMatch<-all(unlist(lapply(fds, identical, fds[[1]]))) # compare all df to the first one
+  if(fdMatch==FALSE){
+    stop("The analytes/bid of the objects to merge are different")
+  }
+  # layout is identical
+  pds<-lapply(list_obj, function(x){ pData(x) })
+  pds<-lapply(pds, function(x){ x[,!colnames(x)%in%c("plate", "filename", "sample_id", "center")] })
+  pds<-lapply(pds, function(x){ x[with(x, order(well)),] })
+  pdMatch<-all(unlist(lapply(pds, identical, pds[[1]])))
+  if(pdMatch==FALSE){
+    stop("The phenotype data of the objects to merge are different. Different layout?")
+  }
+  
   return(TRUE)
 }
 
-#make a meth
 setGeneric("set_center", function(object, center_name) standardGeneric("set_center"))
 setMethod("set_center", signature=c("blum", "character"), function(object, center_name){
   pd<-pData(object)
@@ -267,8 +281,6 @@ setMethod("set_center", signature=c("blum", "character"), function(object, cente
   exprs(object)<-dt
   return(object)
 })
-
-#For slum: pData, exprs and add cols to conc matrix to modify
 
 setMethod("set_center", signature=c("slum", "character"), function(object, center_name){
   pd<-pData(object)
