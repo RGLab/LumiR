@@ -217,10 +217,16 @@ read.experiment<-function(path="./"){
     stop("The phenotype mapping file must at least have the 'plate', 'filename' and 'well' columns\n")
   }
   for(i in 1:nrow(df)){
-    if(length(list.files(paste(path, df[i,"plate"], sep="/"),pattern=as.character(df[i,"filename"])))==0){
+    if(length(list.files(paste(path, df[i,"plate"], sep="/"),pattern=.strip.bad.filenames(as.character(df[i,"filename"]))))==0){
       stop("The file ", as.character(df[i, "filename"]), " is not found in the given path. Verify plate and filename information in phenotype mapping file")
     }
   }
   phenoData<-as(df, "AnnotatedDataFrame")
   return(phenoData)
+}
+
+.strip.bad.filenames<-function(string){
+  #Escape the bad characters
+  string<-gsub("\\+", "\\\\+", string)
+  return(string)
 }
