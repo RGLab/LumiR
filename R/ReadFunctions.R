@@ -80,7 +80,8 @@ read.experiment<-function(path="./"){
 
 .getXponentWellsID<-function(filenames){
   filenames<-gsub(".csv", "", filenames, fixed=TRUE)
-  filenames<-unlist(lapply(filenames, function(x)tail(strsplit(x,"/")[[1]],1)))
+  #filenames<-unlist(lapply(filenames, function(x)tail(strsplit(x,"/")[[1]],1)))
+  filenames<-basename(filenames)
   if(length(grep("Run", filenames))==0){#XPONENT v3.
     wellsID<-unlist(lapply(strsplit(filenames, split="_"), tail, 1))
   } else{#XPONENT v1.

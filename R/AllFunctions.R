@@ -28,14 +28,18 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
         wellsPerFile<-sapply(all.files, function(x){
           xmlSize(xmlRoot(xmlTreeParse(x))[["Wells"]])
         })
-        fNames<-rep(unlist(lapply(all.files, lapply, function(x)tail(strsplit(x,"/")[[1]],1))), wellsPerFile)
+        #fNames<-rep(unlist(lapply(all.files, lapply, function(x)tail(strsplit(x,"/")[[1]],1))), wellsPerFile)
+        fNames <- basename(all.files)
         plate<-rep(plates, wellsPerFile)
-        plate<-sapply(strsplit(plate, split="/"), tail, 1)
+        #plate<-sapply(strsplit(plate, split="/"), tail, 1)
+        plate <- basename(plate)
       } else {
         len<-lapply(plates, function(x){length(list_files_with_exts(x,exts=typeExt))})
-        fNames<-unlist(lapply(all.files, function(x)tail(strsplit(x,"/")[[1]],1)))
+        #fNames<-unlist(lapply(all.files, function(x)tail(strsplit(x,"/")[[1]],1)))
+        fNames <- basename(all.files)
         plate<-rep(plates, len)
-        plate<-sapply(strsplit(plate, split="/"), tail, 1)
+        #plate<-sapply(strsplit(plate, split="/"), tail, 1)
+        plate <- basename(plate)
         if(type=="XPONENT"){
           wells<-.getXponentWellsID(fNames)
         } else if(type=="LXB"){
