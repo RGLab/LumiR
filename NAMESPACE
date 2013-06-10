@@ -46,7 +46,7 @@ exportMethods("show", "pData", "fData", "exprs", "concentration", "fit", "melt",
 	"fData<-", "pData<-", "formula<-",
 	"geom_sc", "plot_layout")
 exportClasses("blum","slum")
-export("read.experiment", "slummarize", "setup_templates")
+export("read.experiment", "slummarize", "setup_templates", "writeMBAA")
 	#, "results.conc.CSV", "results.curves.CSV")
 
 

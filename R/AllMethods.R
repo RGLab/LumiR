@@ -65,7 +65,8 @@ setMethod("fit", "slum",function(object){
 })
 setGeneric("concentration" ,function(object,...) standardGeneric("concentration"))
 setMethod("concentration", "slum", function(object){
-  return(assayData(object)$concentration)
+  #return(assayData(object)$concentration)
+  return(assayDataElement(object, "concentration"))
 })
 
 ## Subset method to subset a la eSet
@@ -292,13 +293,14 @@ setMethod("set_center", signature=c("slum", "character"), function(object, cente
         pd$plate, pd$well, sep="_")
   } else{
     for(plate in unique(pd$plate)){
-      cNames<-gsub(paste0(plate,"_"), paste(center_name, plate, sep="_"), cNames)
+      cNames<-gsub(paste0(plate,"_"), paste(center_name, "_", plate, "_",  sep=""), cNames)
     }
     pd$plate<-paste(center_name, pd$plate, sep="_")
     pd$sample_id<-paste(sapply(strsplit(as.character(pd$filename), split="\\."), function(x){x[-length(x)]}),
         pd$plate, pd$well, sep="_")
   }
   colnames(exprs(object))<-cNames
+  colnames(assayData(object)$concentration)<-cNames
   pd$center<-rep(center_name, nrow(pd))
   pData(object)<-pd
   return(object)

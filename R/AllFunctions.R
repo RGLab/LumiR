@@ -185,6 +185,40 @@ results.curves.CSV<-function(object, file="./curves.csv"){
   return(invisible(toWrite))
 }
 
+#Make results similar to https://immport.niaid.nih.gov/example_submission_packages/MBAA_Results.xls
+#Source ID, Source ID Type,  Assay ID,  Assay Group ID,  Analyte Name,  MFI, Concentration Value, Concentration Unit,  MFI, Coordinate,  Comment
+writeMBAA <- function(object, outfile="./MBAA_results.csv"){
+  pd <- pData(object)
+  SourceID <- SourceIDType <- AssayID <- AssayGroup <- AnalyteName <- c()
+  MFI <- ConcentrationValue <- c()
+  MFICoordinate <- c()
+  for(i in 1:nrow(pd)){ #loop on samples
+    sources <- rep(pd[i, "sample_id"], dim(object)[1])
+    sources_type <- rep(as.character(pd[i, "sample_type"]), dim(object)[1])
+    AID <- rep(pd[i, "plate"], dim(object)[1])
+    AG <- rep(pd[i, "center"], dim(object)[1])
+    analytes <- rownames(exprs(object))
+    mfis <- exprs(object)[,pd[i, "sample_id"]]
+    concs <- concentration(object)[,pd[i, "sample_id"]]
+    mfics <- rep(as.character(pd[i, "well"]), dim(object)[1])
+    #
+    SourceID <- c(SourceID, sources)
+    SourceIDType <- c(SourceIDType, sources_type)
+    AssayID <- c(AssayID, AID)
+    AssayGroup <- c(AssayGroup, AG)
+    AnalyteName <- c(AnalyteName, analytes)
+    MFI <- c(MFI, mfis)
+    ConcentrationValue <- c(ConcentrationValue, concs)
+    MFICoordinate <- c(MFICoordinate, mfics)
+  }
+  OUT <- data.frame( `Source ID` = SourceID, `Source ID Type` = SourceIDType, 
+                     `Assay ID` = AssayID, `Assay Group ID` = AssayGroup,
+                     `Analyte Name` = AnalyteName, MFI = MFI,
+                     `Concentration Value` = ConcentrationValue, `MFI Coordinate` = MFICoordinate)
+  write.csv(OUT, file=outfile)
+  #return(OUT)
+}
+
 
 ####################
 ##  SUMMARY       ##
@@ -217,9 +251,8 @@ slummarize<-function(from,type="MFI"){
   inv<-mfiSet@inv
   for(i in 1:nrow(mat)){
     for(j in 1:ncol(mat)){
-      conc<-c(conc, mfiSet@inv(mat[[i,j]],
-               #coefs[coefs$plate==tail(strsplit(colnames(mat)[j], "_")[[1]],2)[1] & coefs$analyte==rownames(mat)[i], 3:7]))
-               coefs[coefs$plate==pData(mfiSet)[pData(mfiSet)$sample_id==colnames(mat)[j], "plate"] & coefs$analyte==rownames(mat)[i], 3:7]))
+      conc<-c(conc, as.numeric(mfiSet@inv(mat[[i,j]],
+               coefs[coefs$plate==pData(mfiSet)[pData(mfiSet)$sample_id==colnames(mat)[j], "plate"] & coefs$analyte==rownames(mat)[i], 3:7])))
     }
   }
   concMat<-matrix(conc, ncol=ncol(mat))
