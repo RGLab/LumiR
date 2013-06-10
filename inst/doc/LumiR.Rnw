@@ -183,7 +183,7 @@ Here again, any argument will be passed to the underlying \texttt{ggplot2}'s met
 \section{output}
 An slum object can be written to a file following \htmladdnormallink{ImmPort}{https://immport.niaid.nih.gov/immportWeb/home/home.do?loginType=full} MBAA (Multiplex Bead Array Assays) format.
 
-First, the name of the organisation producing the data should be added using the \texttt{set\_center} function.
+First, the name of the organisation producing the data should be added using the \texttt{set\_center} function. On top of adding a column to the phenoData, it will change the sample\_id so that similar experiments run at different locations can be identified.
 
 <<set\_center>>=
 sl <- set_center(sl, "FHCRC")

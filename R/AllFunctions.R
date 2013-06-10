@@ -187,7 +187,7 @@ results.curves.CSV<-function(object, file="./curves.csv"){
 
 #Make results similar to https://immport.niaid.nih.gov/example_submission_packages/MBAA_Results.xls
 #Source ID, Source ID Type,  Assay ID,  Assay Group ID,  Analyte Name,  MFI, Concentration Value, Concentration Unit,  MFI, Coordinate,  Comment
-writeMBAA <- function(object, outfile="./MBAA_results.csv"){
+writeMBAA <- function(object, outfile="./MBAA_results.csv", concentration_unit="pg/mL"){
   pd <- pData(object)
   SourceID <- SourceIDType <- AssayID <- AssayGroup <- AnalyteName <- c()
   MFI <- ConcentrationValue <- c()
@@ -211,11 +211,14 @@ writeMBAA <- function(object, outfile="./MBAA_results.csv"){
     ConcentrationValue <- c(ConcentrationValue, concs)
     MFICoordinate <- c(MFICoordinate, mfics)
   }
+  len <- length(AssayID)
+  ConcentrationUnit <- rep(concentration_unit, len)
   OUT <- data.frame( `Source ID` = SourceID, `Source ID Type` = SourceIDType, 
                      `Assay ID` = AssayID, `Assay Group ID` = AssayGroup,
                      `Analyte Name` = AnalyteName, MFI = MFI,
-                     `Concentration Value` = ConcentrationValue, `MFI Coordinate` = MFICoordinate)
-  write.csv(OUT, file=outfile)
+                     `Concentration Value` = ConcentrationValue, `Concentration Unit` = ConcentrationUnit,
+                     `MFI Coordinate` = MFICoordinate)
+  write.csv(OUT, file=outfile, row.names=FALSE)
   #return(OUT)
 }
 
