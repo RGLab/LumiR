@@ -200,7 +200,7 @@ read.experiment<-function(path="./"){
   if(length(unique(df$well))!=nrow(df)){#wells are unique
     stop("The layout file should contain only one line per well")
   }
-  if(nrow(df[df$sample_type!="standard" & df$sample_type!="background" & !is.na(df$concentration),])){#conc only set for standards
+  if(nrow(df[df$sample_type!="standard" & df$sample_type!="blank" & df$sample_type!="control" & df$sample_type!="background" & !is.na(df$concentration),])){
     stop("The 'concentration' in layout mapping file should only be set for standard wells\n Check wells: ",paste(as.character(df[df$sample_type!="standard" & !is.na(df$concentration),"well"]), collapse=","))
   }
   if(nrow(df[df$sample_type=="background" & !(is.na(df$concentration) | df$concentration==0),])){

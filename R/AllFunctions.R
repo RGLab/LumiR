@@ -29,7 +29,7 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
           xmlSize(xmlRoot(xmlTreeParse(x))[["Wells"]])
         })
         #fNames<-rep(unlist(lapply(all.files, lapply, function(x)tail(strsplit(x,"/")[[1]],1))), wellsPerFile)
-        fNames <- basename(all.files)
+        fNames <- rep(basename(all.files), wellsPerFile)
         plate<-rep(plates, wellsPerFile)
         #plate<-sapply(strsplit(plate, split="/"), tail, 1)
         plate <- basename(plate)
@@ -63,11 +63,16 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
     if(length(layout.file)>0){
       warning("The layout mapping file already exists, remove it to setup a template for it")
     } else {
-      wells<-paste0(LETTERS[1:8], rep(seq(1,12), each=8))
-      sample_type<-rep("unknown", length(wells))
-      concentration<-rep(NA, length(wells))
-      layout.df<-data.frame(well=wells, sample_type=sample_type, concentration=concentration)
-      dfList[["layout"]]<-layout.df
+      if(type == "BIOPLEX"){
+        layout.df <- .getBioplexLayout(all.files[[1]]) #Because all layout have to be the same
+        dfList[["layout"]]<-layout.df
+      } else {
+        wells<-paste0(LETTERS[1:8], rep(seq(1,12), each=8))
+        sample_type<-rep("unknown", length(wells))
+        concentration<-rep(NA, length(wells))
+        layout.df<-data.frame(well=wells, sample_type=sample_type, concentration=concentration)
+        dfList[["layout"]]<-layout.df
+      }
       if(write){
         write.csv(layout.df, file=paste0(path,"layout.csv"), row.names=FALSE)
       }
@@ -120,15 +125,20 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
 .getBioplexBID<-function(firstFile){
   xml<-xmlTreeParse(firstFile)
   root<-xmlRoot(xml)
-  BIDs<-as.numeric(xmlSApply(root[["Wells"]][[1]][["RunSettings"]][["RegionsOfInterest"]], xmlAttrs))
+  ROIsNode <- root[["Wells"]][[1]][["RunSettings"]][["RegionsOfInterest"]]
+  BIDs<-as.numeric(xmlSApply(ROIsNode, xmlAttrs))
+  #BIDs<-as.numeric(xmlSApply(root[["Wells"]][[1]][["RunSettings"]][["RegionsOfInterest"]], xmlAttrs))
   return(BIDs)
 }
 
 .getBioplexAnalytes<-function(firstFile){
   xml<-xmlTreeParse(firstFile)
   root<-xmlRoot(xml)
-  BIDs<-as.numeric(xmlSApply(root[["Samples"]][[1]][[1]][["Analytes"]], xmlAttrs))
-  analytes<-xmlSApply(root[["Samples"]][[1]][[1]][["Analytes"]], function(x){xmlValue(x[["AnalyteName"]])})
+  AnalytesNode <- root[["Samples"]][[1]][[1]][["Analytes"]]
+  BIDs<-as.numeric(xmlSApply(AnalytesNode, xmlAttrs))
+  analytes<-xmlSApply(AnalytesNode, function(x){xmlValue(x[["AnalyteName"]])})
+  #BIDs<-as.numeric(xmlSApply(root[["Samples"]][[1]][[1]][["Analytes"]], xmlAttrs))
+  #analytes<-xmlSApply(root[["Samples"]][[1]][[1]][["Analytes"]], function(x){xmlValue(x[["AnalyteName"]])})
   analyte.df<-data.frame(analyte=analytes, bid=BIDs)
   return(analyte.df)
 }
@@ -152,6 +162,24 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
   #return(featureData)
 }
 
+.getBioplexLayout <- function(fName){
+  xml <- xmlTreeParse(fName)
+  root <- xmlRoot(xml)
+  node <- root[["Samples"]]
+  sample_type <- tolower(unlist(xmlSApply(node, names)))
+  exp_concs <- unlist(xmlSApply(node, function(x){ xmlSApply(x,
+                                      function(xx){ as.numeric(xmlValue(xx[["Analytes"]][[1]][["ExpectedConc"]])) })}))
+  rep_cnt <- unlist(xmlSApply(node, function(x){ xmlSApply(x, 
+                                    function(xx){as.numeric(xmlValue(xx[["Analytes"]][[1]][["ReplicateCount"]])) }) }))
+  concentration <- rep(exp_concs, rep_cnt)
+  well <- unlist(xmlSApply(node, function(x){ xmlSApply(x,
+                                 function(xx){ xmlSApply(xx[["MemberWells"]],
+                                 function(xxx){ paste(LETTERS[as.numeric(xmlAttrs(xxx)["RowNo"])], xmlAttrs(xxx)["ColNo"], sep="")}
+                )})}))
+  layout.df <- data.frame(well = well, sample_type = sample_type, concentration = concentration)
+  #layout.df <- layout.df[gtools::mixedorder(ldf$well),] #if I need to increase readability of layout.csv
+  return(layout.df)
+}
 
 
 ####################
@@ -243,6 +271,9 @@ slummarize<-function(from,type="MFI"){
   df<-melt(mfiSet)
   # subselects standards
   df<-subset(df, concentration!=0 & tolower(sample_type)=="standard")
+  if(nrow(df)==0){
+    stop("The object does not contain any standard. Edit layout.csv to include standards location and concentration.")
+  }
   # Split by plate
   sdf<-split(df,df$plate)
   df2<-lapply(sdf,.fit_sc, mfiSet@inv)
