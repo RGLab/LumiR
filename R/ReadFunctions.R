@@ -55,9 +55,10 @@ read.experiment<-function(path="./"){
   }
   # Join with phenoData so we can add the sample_id to the exprs
   # Do we need to do this? Added well to make keys unique in phenoDT
-  #setkeyv(phenoDT,c("plate","filename"))
   setkey(exprs,plate,filename,well)    
-  exprs<-exprs[phenoDT,]
+  setkey(phenoDT,plate,filename,well)    
+  #exprs<-exprs[phenoDT,]
+  exprs<-phenoDT[exprs,]
   setkey(exprs,sample_id)
 
   #fData

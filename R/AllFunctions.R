@@ -86,7 +86,7 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
     } else {
       if(type=="LXB" & length(list_files_with_exts(path, exts="lxd")>0)){
           lxdFile<-list_files_with_exts(path, exts="lxd")
-          analyte.df<-.read.lxd(lxdFile) 
+          analyte.df<-.read.lxd(lxdFile[1])
       } else if(type=="BIOPLEX"){
         analyte.df<-.getBioplexAnalytes(all.files[1])
       } else{
