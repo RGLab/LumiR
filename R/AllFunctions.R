@@ -109,6 +109,13 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
   return(invisible(dfList))
 }
 
+#.getLXDPheno <- function(lxdFiles){
+#  #An lx
+#  for(lxdF in lxdFiles){
+#    xml <- xmlParse(lxdF)
+#    locName <- sapply(root[["Plate"]][which(names(root[["Plate"]]) == "Well")], function(x){ xmlValue(x[["LocName"]])})
+#  }
+
 .getXponentBID<-function(firstFile){
   #sLine<-grep("[Ee]vent[Nn]o", readLines(firstFile[1], n=5))-1
   #con<-read.csv(firstFile, skip=sLine, header=TRUE);
@@ -215,7 +222,8 @@ results.curves.CSV<-function(object, file="./curves.csv"){
 
 #Make results similar to https://immport.niaid.nih.gov/example_submission_packages/MBAA_Results.xls
 #Source ID, Source ID Type,  Assay ID,  Assay Group ID,  Analyte Name,  MFI, Concentration Value, Concentration Unit,  MFI, Coordinate,  Comment
-writeMBAA <- function(object, outfile="./MBAA_results.csv", concentration_unit="pg/mL"){
+writeMBAA <- function(object, outfile="./MBAA_results", type=".csv", concentration_unit="pg/mL"){
+  outfile <- paste(outfile, type, sep=".")
   pd <- pData(object)
   SourceID <- SourceIDType <- AssayID <- AssayGroup <- AnalyteName <- c()
   MFI <- ConcentrationValue <- c()
@@ -246,7 +254,14 @@ writeMBAA <- function(object, outfile="./MBAA_results.csv", concentration_unit="
                      `Analyte Name` = AnalyteName, MFI = MFI,
                      `Concentration Value` = ConcentrationValue, `Concentration Unit` = ConcentrationUnit,
                      `MFI Coordinate` = MFICoordinate)
-  write.csv(OUT, file=outfile, row.names=FALSE)
+  if(type=="csv"){
+    write.csv(OUT, file=outfile, row.names=FALSE)
+  } else if(type=="xls"){
+    write.xlsx(OUT, file=outfile, row.names=FALSE)
+  } else {
+    warning("writeMBAA only accepts 'csv' and 'xls' output. The file will be csv.")
+    write.csv(OUT, file=outfile, row.names=FALSE)
+  }
   #return(OUT)
 }
 

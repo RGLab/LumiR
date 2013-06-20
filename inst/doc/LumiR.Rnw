@@ -189,11 +189,12 @@ First, the name of the organisation producing the data should be added using the
 sl <- set_center(sl, "FHCRC")
 @
 
-Then, \texttt{writeMBAA} can be used to write a csv file that can be opened using Excel and contain the fields required by ImmPort.
+Then, \texttt{writeMBAA} can be used to write a csv or xls file that contains the fields required by ImmPort.
 
 <<writeMBAA, eval=FALSE>>=
-writeMBAA(sl, outfile="./MBAA.results.csv")
+writeMBAA(sl, outfile="./MBAA.results", type="csv")
 @
+
 
 
 
