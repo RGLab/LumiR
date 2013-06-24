@@ -7,6 +7,7 @@
 \alias{pData,blum-method}
 \alias{pData<-,blum,data.frame-method}
 \alias{exprs,blum-method}
+\alias{merge,blum,blum-method}
 \alias{melt}
 \alias{melt,blum-method}
 
@@ -31,6 +32,7 @@ The \code{blum} class is a container for the raw bead level information of a mul
     \item{pData}{\code{signature(object = "blum")}: Accessor for the featureData slot.}
     \item{exprs}{\code{signature(object = "blum")}: Print the \code{data.table} with the bead events.}
     \item{melt}{\code{signature(x = "blum")}: Convert a `blum' into a data.frame.}
+    \item{merge}{\code{signature(x = c("blum","blum"))}: Merge two \code{blum} objects if they can be merged (centers are set and experiment design is identical).}
   }
 }
 

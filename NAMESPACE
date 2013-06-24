@@ -51,4 +51,4 @@ export("read.experiment", "slummarize", "setup_templates", "writeMBAA")
 
 
 #dev export
-exportPattern("^.")
+#exportPattern("^.")

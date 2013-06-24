@@ -110,7 +110,7 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
 }
 
 #.getLXDPheno <- function(lxdFiles){
-#  #An lx
+#  #1lxd/plate or just 1lxd
 #  for(lxdF in lxdFiles){
 #    xml <- xmlParse(lxdF)
 #    locName <- sapply(root[["Plate"]][which(names(root[["Plate"]]) == "Well")], function(x){ xmlValue(x[["LocName"]])})
@@ -222,7 +222,7 @@ results.curves.CSV<-function(object, file="./curves.csv"){
 
 #Make results similar to https://immport.niaid.nih.gov/example_submission_packages/MBAA_Results.xls
 #Source ID, Source ID Type,  Assay ID,  Assay Group ID,  Analyte Name,  MFI, Concentration Value, Concentration Unit,  MFI, Coordinate,  Comment
-writeMBAA <- function(object, outfile="./MBAA_results", type=".csv", concentration_unit="pg/mL"){
+writeMBAA <- function(object, outfile="./MBAA_results", type="csv", concentration_unit="pg/mL"){
   outfile <- paste(outfile, type, sep=".")
   pd <- pData(object)
   SourceID <- SourceIDType <- AssayID <- AssayGroup <- AnalyteName <- c()
