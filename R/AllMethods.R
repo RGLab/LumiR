@@ -119,6 +119,9 @@ setMethod("melt","slum",
             df<-reshape2::melt(exprs(x))
             names(df)<-c("analyte","sample_id",tolower(x@unit))            
             ## merge all information
+            if("analyte" %in% colnames(pData(x))){
+              stop("'analyte' should not be part of the phenoData")
+            }
             df<-merge(df,pData(x),by=c("sample_id"))
             df<-merge(df,fData(x),by="analyte")
             return(df)
