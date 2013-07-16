@@ -276,7 +276,9 @@ slummarize<-function(from,type="MFI"){
   setnames(dt, c("sample_id", "analyte", type))
   setkey(dt, sample_id)
   mat<-matrix(dt[,MFI], ncol=length(unique(dt[,sample_id])), dimnames=list(unique(dt[,analyte]),unique(dt[,sample_id])))
-  mfiSet<-new("slum", formula=as.formula("log(mfi) ~ c + (d - c)/(1 + exp(b * (log(x) - log(e))))^f"), inv=function(y, parmVec){exp(log(((parmVec[3] - parmVec[2])/(log(y) - parmVec[2]))^(1/parmVec[5]) - 1)/parmVec[1] + log(parmVec[4]))}
+  mfiSet <- new("slum", formula=as.formula("log(mfi) ~ c + (d - c)/(1 + exp(b * (log(x) - log(e))))^f"), 
+    inv=function(y, parmVec){
+      exp(log(((parmVec[3] - parmVec[2])/(log(y) - parmVec[2]))^(1/parmVec[5]) - 1)/parmVec[1] + log(parmVec[4]))}
   )
   exprs(mfiSet)<-mat
   pData(mfiSet)<-pData(from)
@@ -295,19 +297,8 @@ slummarize<-function(from,type="MFI"){
   df2<-do.call("rbind",df2)
   mfiSet@fit<-df2
 
-  conc<-c()
-  coefs<-unique(mfiSet@fit[,c("plate", "analyte", "b","c","d","e","f")])
-  inv<-mfiSet@inv
-  for(i in 1:nrow(mat)){
-    for(j in 1:ncol(mat)){
-      conc<-c(conc, as.numeric(mfiSet@inv(mat[[i,j]],
-               coefs[coefs$plate==pData(mfiSet)[pData(mfiSet)$sample_id==colnames(mat)[j], "plate"] & coefs$analyte==rownames(mat)[i], 3:7])))
-    }
-  }
-  concMat<-matrix(conc, ncol=ncol(mat))
-  rownames(concMat)<-rownames(mat)
-  colnames(concMat)<-colnames(mat)
-  assayData(mfiSet)<-list(exprs=mat, concentration=concMat)
+  conc_mat <- .get_conc_matrix(mfiSet)
+  assayData(mfiSet)<-list(exprs=mat, concentration=conc_mat)
   mfiSet
 }
 
@@ -331,3 +322,25 @@ slummarize<-function(from,type="MFI"){
   df2<-cbind(df[,c("sample_id", "plate", "filename", "well", "analyte", "mfi", "concentration")], calc_conc, p100rec, sortCoeffs)
   return(df2)
 }
+
+.get_conc_matrix <- function(object){
+  coefs <- unique(object@fit[,c("plate", "analyte", letters[2:6])])
+  mfi <- exprs(object)
+  pd <- pData(object)
+  inv5PL <- object@inv
+  concentration <- numeric()
+    for(j in 1:ncol(mfi)){
+      plate <- as.character(unique(pd[ pd$sample_id==colnames(mfi)[j], "plate"]))
+  for(i in 1:nrow(mfi)){
+    curAna <- rownames(mfi)[i]
+      curCoefs <- as.numeric(coefs[coefs$plate==plate & coefs$analyte==curAna, letters[2:6]])
+      concentration <- c(concentration, inv5PL(y = mfi[i,j], parmVec=curCoefs))
+    }
+  }
+  conc_mat <- matrix(concentration, ncol=ncol(mfi))
+  rownames(conc_mat) <- rownames(mfi)
+  colnames(conc_mat) <- colnames(mfi)
+  return(conc_mat)
+}
+  
+  
