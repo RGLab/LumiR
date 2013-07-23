@@ -67,6 +67,7 @@ read.experiment<-function(path="./"){
   } else {
     featureData<-as(template_list[["analyte"]], "AnnotatedDataFrame")
   }
+    featureNames(featureData) <- pData(featureData)$analyte
     mapping<-as.data.table(featureData@data)
     setkey(exprs,bid)
     setkey(mapping,bid)

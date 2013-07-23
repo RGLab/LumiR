@@ -92,6 +92,20 @@ setMethod("concentration", "slum", function(object){
 #            newSet            
 #          })
 
+#setMethod("[","blum", function(x, i, j, ..., drop=FALSE){
+#  if(missing(drop)){
+#    drop <- FALSE
+#  }
+#  if(!missing(j)){
+#    phenoData(x) <- phenoData(x)[j, , ..., drop = drop]
+#    #ss the dt
+#  }
+#  if (!missing(i)){
+#    featureData(x) <- featureData(x)[i, , ..., drop = drop]
+#    #ss the dt
+#
+#  }
+
 # I add the pheno and feature information by default we could add an option for this
 # Need to sort this out with reshape2
 # Also needs some work
