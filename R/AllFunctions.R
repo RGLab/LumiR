@@ -343,4 +343,56 @@ slummarize<-function(from,type="MFI"){
   return(conc_mat)
 }
   
+ mslum2 <- function(slum){
+  mslum <- data.table(Kmisc::melt_(exprs(slum)))
+  setnames(mslum, colnames(mslum), c("analyte","sample_id",tolower(slum@unit)))
+  mslum <- merge(mslum, pData(slum), by="sample_id")
+  mslum <- merge(mslum, fData(slum), by="analyte")
   
+  return(mslum)
+}
+
+slummarize2<-function(from,type="MFI"){
+  dt<-exprs(from)
+  dt<-dt[,as.double(median(fl)), by="sample_id,analyte"]
+  setnames(dt, c("sample_id", "analyte", type))
+  setkey(dt, sample_id)
+  mat<-matrix(dt[,MFI], ncol=length(unique(dt[,sample_id])), dimnames=list(unique(dt[,analyte]),unique(dt[,sample_id])))
+  mfiSet <- new("slum", formula=fivePL_formula, inv=fivePL_inverse)
+  exprs(mfiSet)<-mat
+  pData(mfiSet)<-pData(from)
+  fData(mfiSet)<-fData(from)
+  mfiSet@unit="MFI"
+  
+  melt_slum <- mslum2(mfiSet)  
+  melt_slum <- melt_slum[concentration!=0 & sample_type=="standard"]
+  if(nrow(melt_slum)==0){
+    stop("The object does not contain any standard. Edit layout.csv to include standards location and concentration.")
+  }
+  fit <- melt_slum
+  setkeyv(fit, c("plate","analyte"))
+  coefnames <- letters[2:6]
+  #drm cares about the order of the data points
+  #however, the fit should be of similar quality
+  fit[,  eval(coefnames):= {res <- as.numeric(t(drm(log(mfi) ~ concentration, fct=LL.5())$parmMat)); as.list(res)}, by="plate,analyte"]
+  fit[, calc_conc:=fivePL_inverse(mfi, b,c,d,e,f)]
+  fit[, p100_recov:=calc_conc/concentration*100]
+  mfiSet@fit <- data.frame(fit)
+  conc_mat <- .get_concentration_matrix(mfiSet)
+  assayData(mfiSet) <- list(exprs=mat, concentration=conc_mat)
+  return(mfiSet)
+}
+
+.get_concentration_matrix <- function(object){
+  fit_dt <- data.table(object@fit)
+  exprs_dt <- data.table(Kmisc::melt_(exprs(object)))
+  pd_dt <- data.table(pData(object))
+  setnames(exprs_dt, c("analyte", "sample_id", object@unit))
+  setkeyv(fit_dt, c("analyte", "sample_id"))
+  setkeyv(exprs_dt, c("analyte", "sample_id"))
+  setkeyv(pd_dt, c("sample_id"))
+  bdt <- merge(pd_dt, exprs_dt, by="sample_id")[,c("analyte", "sample_id", "plate", object@unit), with=FALSE]
+  bdt <- merge(bdt, unique(fit_dt[, list(analyte, plate, b, c, d, e, f)]), by=c("analyte","plate"))
+  bdt <- bdt[, concentration:=object@inv(MFI, b, c, d, e, f)]
+  conc_mat <- acast(bdt, analyte ~ sample_id, value.var="concentration")
+} 

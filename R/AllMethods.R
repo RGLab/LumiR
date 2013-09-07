@@ -69,28 +69,28 @@ setMethod("concentration", "slum", function(object){
   return(assayDataElement(object, "concentration"))
 })
 
-## Subset method to subset a la eSet
-#setMethod("[","blum",
-#          function(x,i,j,..., drop=FALSE)
-#          {
-#            if(!missing(i))
-#            {
-#              #Subset the samples
-#              bdata<-exprs(x)[j]
-#              #Subset the analytes
-#              bdata<-lapply(exprs(x),"[",i)              
-#            }
-#            else
-#            {
-#              #Subset the analytes         
-#              bdata<-lapply(exprs(x),"[",i)              
-#            }            
-#            newSet<-new('blum'
-#                        ,exprs=bdata
-#                        ,phenoData=x@phenoData[j,]
-#                        ,featureData=x@featureData[i,])
-#            newSet            
-#          })
+
+setGeneric("subset") #create new S4 generic
+setMethod(f="subset", signature="blum", definition=function(x, subset, select, ...){
+  print("in")
+  if(missing(subset)){
+    fdata_call <- substitute(TRUE)
+  } else{
+    fdata_call <- substitute(subset)
+  }
+  if(missing(select)){
+    pdata_call <- substitute(TRUE)
+  } else{
+    pdata_call <- substitute(select)
+  }
+  fdata_rows <- eval(fdata_call, fData(x), parent.frame())
+  pdata_rows <- eval(pdata_call, pData(x), parent.frame())
+  fData(x) <- fData(x)[fdata_rows,]
+  pData(x) <- pData(x)[pdata_rows,]
+  exprs(x) <- exprs(x)[eval(fdata_call, exprs(x), parent.frame()) & eval(pdata_call, exprs(x), parent.frame()),]
+  x
+})
+
 
 #setMethod("[","blum", function(x, i, j, ..., drop=FALSE){
 #  if(missing(drop)){
