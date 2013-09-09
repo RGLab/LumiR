@@ -109,37 +109,47 @@ setMethod(f="subset", signature="blum", definition=function(x, subset, select, .
 # I add the pheno and feature information by default we could add an option for this
 # Need to sort this out with reshape2
 # Also needs some work
-setGeneric("melt",function(x,...){
-  standardGeneric("melt")
-})
+# setGeneric("melt",function(x,...){
+#   standardGeneric("melt")
+# })
+# 
+# 
+# setMethod("melt","blum",
+# function(x)
+#   {
+#   # Use the melt function in reshape2
+#   df<-reshape2::melt(exprs(x))
+#   names(df)<-c("FL","analyte","sample_id")
+#   df<-merge(df,pData(x),by=c("sample_id"))
+#   df<-merge(df,fData(x),by="analyte")
+#   return(df)
+# })
+# 
+# setMethod("melt","slum",
+#           function(x)
+#           {
+#             # Use the melt function in reshape2
+#             df<-reshape2::melt(exprs(x))
+#             names(df)<-c("analyte","sample_id",tolower(x@unit))            
+#             ## merge all information
+#             if("analyte" %in% colnames(pData(x))){
+#               stop("'analyte' should not be part of the phenoData")
+#             }
+#             df<-merge(df,pData(x),by=c("sample_id"))
+#             df<-merge(df,fData(x),by="analyte")
+#             return(df)
+#           })
+
+melt.slum <- function(slum){
+  mslum <- data.table(melt_(exprs(slum)))
+  setnames(mslum, colnames(mslum), c("analyte","sample_id",tolower(slum@unit)))
+  mslum <- merge(mslum, pData(slum), by="sample_id")
+  mslum <- merge(mslum, fData(slum), by="analyte")
+  return(mslum)
+}
 
 
-setMethod("melt","blum",
-function(x)
-  {
-  # Use the melt function in reshape2
-  df<-reshape2::melt(exprs(x))
-  names(df)<-c("FL","analyte","sample_id")
-  df<-merge(df,pData(x),by=c("sample_id"))
-  df<-merge(df,fData(x),by="analyte")
-  return(df)
-  
-})
 
-setMethod("melt","slum",
-          function(x)
-          {
-            # Use the melt function in reshape2
-            df<-reshape2::melt(exprs(x))
-            names(df)<-c("analyte","sample_id",tolower(x@unit))            
-            ## merge all information
-            if("analyte" %in% colnames(pData(x))){
-              stop("'analyte' should not be part of the phenoData")
-            }
-            df<-merge(df,pData(x),by=c("sample_id"))
-            df<-merge(df,fData(x),by="analyte")
-            return(df)
-          })
 
 #--------
 # formula<-

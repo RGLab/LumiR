@@ -32,9 +32,9 @@ read.experiment<-function(path="./"){
 
   #pData
   if(length(pheno.file)>0){
-    phenoData<-.read.phenotype(path=path, pheno.file=pheno.file)
+    phenotype<-.read.phenotype(path=path, pheno.file=pheno.file)
   } else {
-    phenoData<-as(template_list[["pheno"]], "AnnotatedDataFrame")
+    phenotype<-template_list[["pheno"]]
   }
 
   if(length(layout.file)>0){
@@ -42,10 +42,11 @@ read.experiment<-function(path="./"){
   } else {
     layout<-template_list[["layout"]]
   }
-  pData(phenoData)<-merge(pData(phenoData), layout, by="well")
+  phenoData <- merge(phenotype, layout, by="well")
+  rownames(phenoData) <- rownames(phenotype)
 
   #exprs
-  phenoDT<-as.data.table(pData(phenoData))[,list(plate, filename, well, sample_id)]
+  phenoDT<-as.data.table(phenoData)[,list(plate, filename, well, sample_id)]
   if(type=="BIOPLEX"){
     exprs<-.read.exprs.bioplex(all.files)
   } else if(type=="LXB"){ 
@@ -76,7 +77,7 @@ read.experiment<-function(path="./"){
     # Re-order based on sample_id, then analyte
     setkeyv(exprs,c("sample_id","analyte"))
   
-  blum<-new("blum", phenoData=phenoData, featureData=featureData, exprs=exprs)
+  blum<-new("blum", phenoData=as(phenoData, "AnnotatedDataFrame"), featureData=featureData, exprs=exprs)
   return(blum)
 }
 
@@ -224,8 +225,9 @@ read.experiment<-function(path="./"){
       stop("The file ", as.character(df[i, "filename"]), " is not found in the given path. Verify plate and filename information in phenotype mapping file")
     }
   }
-  phenoData<-as(df, "AnnotatedDataFrame")
-  return(phenoData)
+  rownames(df) <- df$sample_id
+  phenotype <- df
+  return(phenotype)
 }
 
 .strip.bad.filenames<-function(string){

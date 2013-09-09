@@ -5,7 +5,6 @@
 \documentclass[11pt]{article}
 \usepackage{Sweave}
 \usepackage{hyperref}
-%\usepackage{underscore} %%ESCAPE THEM, DONT BE LAZY
 \usepackage[hmargin=2cm, vmargin=3cm]{geometry}
 \SweaveOpts{keep.source=FALSE}
 

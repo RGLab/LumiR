@@ -50,7 +50,7 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
       }
       noExt<-gsub(paste0(".",typeExt), "", fNames)
       sample_id<-paste(noExt, plate, wells, sep="_")
-      phenotype.df<-data.frame(plate=plate,filename=fNames,well=wells, sample_id=sample_id)
+      phenotype.df<-data.frame(plate=plate,filename=fNames,well=wells, sample_id=sample_id, row.names=sample_id)
       dfList[["pheno"]]<-phenotype.df
       if(write){
         write.csv(phenotype.df, file=paste0(path,"phenotype.csv"), row.names=FALSE)
@@ -270,7 +270,7 @@ writeMBAA <- function(object, outfile="./MBAA_results", type="csv", concentratio
 ##  SUMMARY       ##
 ####################
 ### Summarize to MFIs and add standardCurves informations
-slummarize<-function(from,type="MFI"){
+slummarize_old<-function(from,type="MFI"){
   dt<-exprs(from)
   dt<-dt[,as.double(median(fl)), by="sample_id,analyte"]
   setnames(dt, c("sample_id", "analyte", type))
@@ -343,16 +343,13 @@ slummarize<-function(from,type="MFI"){
   return(conc_mat)
 }
   
- mslum2 <- function(slum){
-  mslum <- data.table(Kmisc::melt_(exprs(slum)))
-  setnames(mslum, colnames(mslum), c("analyte","sample_id",tolower(slum@unit)))
-  mslum <- merge(mslum, pData(slum), by="sample_id")
-  mslum <- merge(mslum, fData(slum), by="analyte")
-  
-  return(mslum)
+# More efficient/clean slummarize
+fivePL_formula <- as.formula("log(mfi) ~ c + (d - c)/(1 + exp(b * (log(x) - log(e))))^f")
+fivePL_inverse <- function(y, b,c,d,e,f){
+  exp(log(((d - c)/(log(y) - c))^(1/f) - 1)/b + log(e))
 }
 
-slummarize2<-function(from,type="MFI"){
+slummarize<-function(from,type="MFI"){
   dt<-exprs(from)
   dt<-dt[,as.double(median(fl)), by="sample_id,analyte"]
   setnames(dt, c("sample_id", "analyte", type))
@@ -364,7 +361,7 @@ slummarize2<-function(from,type="MFI"){
   fData(mfiSet)<-fData(from)
   mfiSet@unit="MFI"
   
-  melt_slum <- mslum2(mfiSet)  
+  melt_slum <- melt(mfiSet)  
   melt_slum <- melt_slum[concentration!=0 & sample_type=="standard"]
   if(nrow(melt_slum)==0){
     stop("The object does not contain any standard. Edit layout.csv to include standards location and concentration.")
@@ -374,7 +371,7 @@ slummarize2<-function(from,type="MFI"){
   coefnames <- letters[2:6]
   #drm cares about the order of the data points
   #however, the fit should be of similar quality
-  fit[,  eval(coefnames):= {res <- as.numeric(t(drm(log(mfi) ~ concentration, fct=LL.5())$parmMat)); as.list(res)}, by="plate,analyte"]
+  fit[,  eval(coefnames):= {res <- drm(log(mfi) ~ concentration, fct=LL.5())$coefficients; as.list(res)}, by="plate,analyte"]
   fit[, calc_conc:=fivePL_inverse(mfi, b,c,d,e,f)]
   fit[, p100_recov:=calc_conc/concentration*100]
   mfiSet@fit <- data.frame(fit)
@@ -385,7 +382,7 @@ slummarize2<-function(from,type="MFI"){
 
 .get_concentration_matrix <- function(object){
   fit_dt <- data.table(object@fit)
-  exprs_dt <- data.table(Kmisc::melt_(exprs(object)))
+  exprs_dt <- data.table(melt_(exprs(object)))
   pd_dt <- data.table(pData(object))
   setnames(exprs_dt, c("analyte", "sample_id", object@unit))
   setkeyv(fit_dt, c("analyte", "sample_id"))

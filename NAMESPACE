@@ -27,6 +27,9 @@ importMethodsFrom(Biobase,pData,featureData,fData,"exprs<-")
 
 # Import from reshape2
 # Melt is an S3 method
+importFrom(reshape2, melt, acast)
+importFrom(Kmisc, melt_)
+
 
 #grid
 importFrom(grid, unit)
@@ -35,19 +38,20 @@ importFrom(grid, unit)
 importFrom(ggplot2, ggplot, geom_point, geom_line, geom_polygon, aes, aes_string, facet_wrap, facet_grid, 
 labs, element_blank, theme, theme_bw, scale_x_log10, scale_y_log10)
 
-#data.table
-#importFrom(data.table,"setkey","setkeyv")
-#importClassesFrom(data.table,data.table)
-
 
 ######
 ######
-exportMethods("show", "pData", "fData", "exprs", "concentration", "fit", "melt",
+exportMethods("show", "pData", "fData", "exprs", "concentration", "fit",
+	#"melt",
 	"fData<-", "pData<-", "formula<-",
 	"geom_sc", "plot_layout",
 	"set_center")
 exportClasses("blum","slum")
 export("read.experiment", "slummarize", "setup_templates", "writeMBAA")
+
+#S3
+S3method(melt, slum)
+export("melt")
 
 
 #dev export

@@ -1,6 +1,5 @@
 # TODO
 
-1. add blum subset meth
 4. Deal with NAs
 2. add analyte as fData rownames and sample_id as pData rownames
 9. subset fData slot in slum subset meth
