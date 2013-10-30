@@ -28,8 +28,8 @@ The \code{blum} class is a container for the raw bead level information of a mul
 \section{Methods}{
   \describe{
     \item{show}{\code{signature(object = "blum")}: Print informations about the object.}
-    \item{fData}{\code{signature(object = "blum")}: Accessor for the phenoData slot.}
-    \item{pData}{\code{signature(object = "blum")}: Accessor for the featureData slot.}
+    \item{fData}{\code{signature(object = "blum")}: Accessor for the featureData slot.}
+    \item{pData}{\code{signature(object = "blum")}: Accessor for the phenoData slot.}
     \item{exprs}{\code{signature(object = "blum")}: Print the \code{data.table} with the bead events.}
     \item{melt}{\code{signature(x = "blum")}: Convert a `blum' into a data.frame.}
     \item{merge}{\code{signature(x = c("blum","blum"))}: Merge two \code{blum} objects if they can be merged (centers are set and experiment design is identical).}

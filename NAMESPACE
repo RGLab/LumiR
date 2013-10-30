@@ -41,16 +41,20 @@ labs, element_blank, theme, theme_bw, scale_x_log10, scale_y_log10)
 
 ######
 ######
-exportMethods("show", "pData", "fData", "exprs", "concentration", "fit",
-	#"melt",
-	"fData<-", "pData<-", "formula<-",
-	"geom_sc", "plot_layout",
-	"set_center")
+exportMethods(
+	"show", "subset",
+	#Getters
+	"pData", "fData", "exprs", "concentration", "fit",
+	#Setters
+	"fData<-", "pData<-", "formula<-","set_center",
+	#Plotting
+	"geom_sc", "plot_layout")
 exportClasses("blum","slum")
 export("read.experiment", "slummarize", "setup_templates", "writeMBAA")
 
 #S3
 S3method(melt, slum)
+S3method(melt, blum)
 export("melt")
 
 

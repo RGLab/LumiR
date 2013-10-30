@@ -43,7 +43,7 @@ read.experiment<-function(path="./"){
     layout<-template_list[["layout"]]
   }
   phenoData <- merge(phenotype, layout, by="well")
-  rownames(phenoData) <- rownames(phenotype)
+  rownames(phenoData) <- phenoData$sample_id
 
   #exprs
   phenoDT<-as.data.table(phenoData)[,list(plate, filename, well, sample_id)]

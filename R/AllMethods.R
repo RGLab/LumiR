@@ -72,7 +72,6 @@ setMethod("concentration", "slum", function(object){
 
 setGeneric("subset") #create new S4 generic
 setMethod(f="subset", signature="blum", definition=function(x, subset, select, ...){
-  print("in")
   if(missing(subset)){
     fdata_call <- substitute(TRUE)
   } else{
@@ -146,6 +145,12 @@ melt.slum <- function(slum){
   mslum <- merge(mslum, pData(slum), by="sample_id")
   mslum <- merge(mslum, fData(slum), by="analyte")
   return(mslum)
+}
+melt.blum <- function(blum){
+  mblum <- exprs(blum)
+  mblum <- merge(mblum, pData(blum), by="sample_id")
+mblum <- merge(mblum, fData(blum), by="analyte")
+return(blum)
 }
 
 
