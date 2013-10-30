@@ -139,18 +139,19 @@ setMethod(f="subset", signature="blum", definition=function(x, subset, select, .
 #             return(df)
 #           })
 
-melt.slum <- function(slum){
-  mslum <- data.table(melt_(exprs(slum)))
-  setnames(mslum, colnames(mslum), c("analyte","sample_id",tolower(slum@unit)))
-  mslum <- merge(mslum, pData(slum), by="sample_id")
-  mslum <- merge(mslum, fData(slum), by="analyte")
+melt.slum <- function(data, ..., na.rm, value.name) {
+  mslum <- data.table(melt_(exprs(data)))
+  setnames(mslum, colnames(mslum), c("analyte","sample_id",tolower(data@unit)))
+  mslum <- merge(mslum, pData(data), by="sample_id")
+  mslum <- merge(mslum, fData(data), by="analyte")
   return(mslum)
 }
-melt.blum <- function(blum){
-  mblum <- exprs(blum)
-  mblum <- merge(mblum, pData(blum), by="sample_id")
-mblum <- merge(mblum, fData(blum), by="analyte")
-return(blum)
+
+melt.blum <- function(data, ..., na.rm, value.name) {
+  mblum <- exprs(data)
+  mblum <- merge(mblum, pData(data), by="sample_id")
+  mblum <- merge(mblum, fData(data), by="analyte")
+  return(mblum)
 }
 
 

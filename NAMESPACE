@@ -1,8 +1,13 @@
+useDynLib(LumiR)
+
 #drc
 importFrom(drc, drm, LL.5)
 
 #gdata
 importFrom(gdata, read.xls)
+
+#data.table
+import(data.table)
 
 #stats
 importFrom(stats, relevel)
@@ -28,7 +33,6 @@ importMethodsFrom(Biobase,pData,featureData,fData,"exprs<-")
 # Import from reshape2
 # Melt is an S3 method
 importFrom(reshape2, melt, acast)
-importFrom(Kmisc, melt_)
 
 
 #grid

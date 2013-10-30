@@ -4,8 +4,8 @@ Title: Luminex multiplex array manipulation and analysis
 Version: 0.2.0
 Author: Renan Saueraud <rsautera@fhcrc.org>
 Maintainer: Renan Sauteraud <rsautera@fhcrc.org>
-Depends: R(>= 2.15.0), Biobase, data.table
-Imports: flowCore, methods, XML, gdata, tools, ggplot2, drc, stats, multcomp, Kmisc, reshape2
+Depends: R(>= 2.15.0), Biobase,
+Imports: flowCore, methods, XML, gdata, tools, ggplot2, drc, stats, multcomp, reshape2, data.table
 Suggests:
 Description: Provides S4 structures and functions to deal with Luminex Bead Array Multiplex Assay data
 biocViews:
