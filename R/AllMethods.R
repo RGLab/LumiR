@@ -86,7 +86,9 @@ setMethod(f="subset", signature="blum", definition=function(x, subset, select, .
   pdata_rows <- eval(pdata_call, pData(x), parent.frame())
   fData(x) <- fData(x)[fdata_rows,]
   pData(x) <- pData(x)[pdata_rows,]
-  exprs(x) <- exprs(x)[eval(fdata_call, exprs(x), parent.frame()) & eval(pdata_call, exprs(x), parent.frame()),]
+  #exprs should be subset only based on sample_id and analyte
+  #exprs(x) <- exprs(x)[eval(fdata_call, exprs(x), parent.frame()) & eval(pdata_call, exprs(x), parent.frame()),]
+  exprs(x) <- exprs(x)[analyte %in% fData(x)[, "analyte"] & sample_id %in% pData(x)[, "sample_id"], ]
   x
 })
 
