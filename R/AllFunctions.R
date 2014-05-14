@@ -1,6 +1,39 @@
-####################
-##    TEMPLATES   ##
-####################
+#' Create templates
+#' 
+#' Create files to be used as mapping files. The function will guess as much 
+#' information as possible based on the data files. The created files may be
+#' incomplete and require user modifications but they ensure that the required
+#' columns are present.
+#' 
+#' @param path A \code{character}. The pathname of an experiment folder. This is
+#' the same path as the one that will be used in \code{read.experiment}.
+#' @param templates A \code{character} vector. Can be any combination of 
+#' "layout", "analyte" and "phenotype". A mapping file will be created for each
+#' selected template.
+#' @param write A \code{logical}. If TRUE, write the template files in the 
+#'  given \code{path}. When \code{setup_templates} is called through 
+#'  \code{read.experiment}, write is set to FALSE and the template files are not
+#'  saved.
+#' 
+#' @details
+#' If a mapping file specified by the templates list already exists, the function
+#' will not overwrite the existing file. The files should be removed before 
+#' running the function in order to create new mapping files.
+#' 
+#' @return An invisible \code{list} of \code{data.frame} to be used internally by
+#' \code{read.experiment} if one or more mapping files are missing from the given
+#' path.
+#' 
+#' @author Renan Sauteraud
+#' 
+#' @seealso \code{\link{read.experiment}}
+#' 
+#' @export
+#' @importFrom flowCore read.FCS
+#' @importMethodsFrom flowCore exprs
+#' @importFrom XML xmlRoot xmlTreeParse xmlAttrs xmlValue xmlSApply xmlSize xmlName
+#' @importFrom tools list_files_with_exts
+#' 
 setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), write=TRUE){
   dfList<-list()
   analyte.file<-list.files(path,pattern="analyte",full.names=TRUE)
@@ -220,8 +253,26 @@ results.curves.CSV<-function(object, file="./curves.csv"){
   return(invisible(toWrite))
 }
 
-#Make results similar to https://immport.niaid.nih.gov/example_submission_packages/MBAA_Results.xls
-#Source ID, Source ID Type,  Assay ID,  Assay Group ID,  Analyte Name,  MFI, Concentration Value, Concentration Unit,  MFI, Coordinate,  Comment
+##
+#' Write a slum object as ImmPort MBAA results
+#' 
+#' Format a \code{slum} object into a table as specified by ImmPort template:
+#' 'https://immport.niaid.nih.gov/example_submission_packages/MBAA_Results.xls'.
+#' 
+#' @param object A \code{slum} object. The summarized experiment to report.
+#' @param outfile A \code{character}. The name of the output file without extension.
+#' @param type A \code{character}. Can be "csv" or "xls". Determines the type of 
+#' file to be written. This will also be appended to the filename given in outfile.
+#' @param concentration_unit A \code{character}. The unit of the concentration
+#' to be reported in the document.
+#' 
+#' @author Renan Sauteraud
+#' 
+#' @seealso \code{\link{slum}}
+#' 
+#' @importFrom tools file_ext
+#' @importFrom xlsx write.xlsx
+#' 
 writeMBAA <- function(object, outfile="./MBAA_results", type="csv", concentration_unit="pg/mL"){
   outfile <- paste(outfile, type, sep=".")
   pd <- pData(object)
@@ -269,93 +320,41 @@ writeMBAA <- function(object, outfile="./MBAA_results", type="csv", concentratio
 ####################
 ##  SUMMARY       ##
 ####################
-### Summarize to MFIs and add standardCurves informations
-slummarize_old<-function(from,type="MFI"){
-  dt<-exprs(from)
-  dt<-dt[,as.double(median(fl)), by="sample_id,analyte"]
-  setnames(dt, c("sample_id", "analyte", type))
-  setkey(dt, sample_id)
-  mat<-matrix(dt[,MFI], ncol=length(unique(dt[,sample_id])), dimnames=list(unique(dt[,analyte]),unique(dt[,sample_id])))
-  mfiSet <- new("slum", formula=as.formula("log(mfi) ~ c + (d - c)/(1 + exp(b * (log(x) - log(e))))^f"), 
-    inv=function(y, parmVec){
-      exp(log(((parmVec[3] - parmVec[2])/(log(y) - parmVec[2]))^(1/parmVec[5]) - 1)/parmVec[1] + log(parmVec[4]))}
-  )
-  exprs(mfiSet)<-mat
-  pData(mfiSet)<-pData(from)
-  fData(mfiSet)<-fData(from)
-  mfiSet@unit="MFI"
-
-  df<-melt(mfiSet)
-  # subselects standards
-  df<-subset(df, concentration!=0 & tolower(sample_type)=="standard")
-  if(nrow(df)==0){
-    stop("The object does not contain any standard. Edit layout.csv to include standards location and concentration.")
-  }
-  # Split by plate
-  sdf<-split(df,df$plate)
-  df2<-lapply(sdf,.fit_sc, mfiSet@inv)
-  df2<-do.call("rbind",df2)
-  mfiSet@fit<-df2
-
-  conc_mat <- .get_conc_matrix(mfiSet)
-  assayData(mfiSet)<-list(exprs=mat, concentration=conc_mat)
-  mfiSet
-}
-
-.fit_sc<-function(df, inv)
-{
-  nCtrl<-length(unique(df$well)) #number of wells with standards
-  df.split<-split(df, df$analyte)
-  coeffs<-lapply(df.split, function(x){
-    res<-drm(log(mfi) ~ concentration, data=x,fct=LL.5())
-    return(res$parmMat)
-  })
-
-  calc_conc<-p100rec<-numeric(nrow(df))
-  for(idx in 1:nrow(df))
-  {
-    calc_conc[idx]<-inv(df[idx,"mfi"], coeffs[[df[idx,"analyte"]]])
-    p100rec[idx]<-calc_conc[idx]/df[idx,"concentration"]*100
-  }
-  sortCoeffs<-do.call("rbind", lapply(coeffs[df$analyte], t))
-  colnames(sortCoeffs)<-c('b','c','d','e','f')
-  df2<-cbind(df[,c("sample_id", "plate", "filename", "well", "analyte", "mfi", "concentration")], calc_conc, p100rec, sortCoeffs)
-  return(df2)
-}
-
-.get_conc_matrix <- function(object){
-  coefs <- unique(object@fit[,c("plate", "analyte", letters[2:6])])
-  mfi <- exprs(object)
-  pd <- pData(object)
-  inv5PL <- object@inv
-  concentration <- numeric()
-    for(j in 1:ncol(mfi)){
-      plate <- as.character(unique(pd[ pd$sample_id==colnames(mfi)[j], "plate"]))
-  for(i in 1:nrow(mfi)){
-    curAna <- rownames(mfi)[i]
-      curCoefs <- as.numeric(coefs[coefs$plate==plate & coefs$analyte==curAna, letters[2:6]])
-      concentration <- c(concentration, inv5PL(y = mfi[i,j], parmVec=curCoefs))
-    }
-  }
-  conc_mat <- matrix(concentration, ncol=ncol(mfi))
-  rownames(conc_mat) <- rownames(mfi)
-  colnames(conc_mat) <- colnames(mfi)
-  return(conc_mat)
-}
-  
-# More efficient/clean slummarize
-fivePL_formula <- as.formula("log(mfi) ~ c + (d - c)/(1 + exp(b * (log(x) - log(e))))^f")
-fivePL_inverse <- function(y, b,c,d,e,f){
+.fivePL_formula <- as.formula("log(mfi) ~ c + (d - c)/(1 + exp(b * (log(x) - log(e))))^f")
+.fivePL_inverse <- function(y, b,c,d,e,f){
   exp(log(((d - c)/(log(y) - c))^(1/f) - 1)/b + log(e))
 }
 
+##
+#' Summarize a blum object
+#' 
+#' Summarize a blum object into a slum object. Fit the standard curves and 
+#' calculate median fluorescence intensities (MFI) and the corresponding 
+#' concentrations for each well.
+#' 
+#' @param from A \code{blum} object. The object to summarize. The object must 
+#' have information about the standards location and concentration in its 
+#' \code{phenodata} slot. See the user guide for more information on the 
+#' requirements.
+#' @param type A \code{character}. "MFI"
+#' 
+#' @return An object of class \code{slum}. With two expression matrices for MFI 
+#' and concentrations.
+#'  
+#' @author Renan Sauteraud
+#' 
+#' @seealso \code{\link{blum}}, \code{\link{slum}}
+#' @export
+#' @importFrom drc drm LL.5
+#' @importFrom reshape2 melt acast
+#' 
 slummarize<-function(from,type="MFI"){
   dt<-exprs(from)
   dt<-dt[,as.double(median(fl)), by="sample_id,analyte"]
   setnames(dt, c("sample_id", "analyte", type))
   setkey(dt, sample_id)
   mat<-matrix(dt[,MFI], ncol=length(unique(dt[,sample_id])), dimnames=list(unique(dt[,analyte]),unique(dt[,sample_id])))
-  mfiSet <- new("slum", formula=fivePL_formula, inv=fivePL_inverse)
+  mfiSet <- new("slum", formula=.fivePL_formula, inv=.fivePL_inverse)
   exprs(mfiSet)<-mat
   pData(mfiSet)<-pData(from)
   fData(mfiSet)<-fData(from)
@@ -372,7 +371,7 @@ slummarize<-function(from,type="MFI"){
   #drm cares about the order of the data points
   #however, the fit should be of similar quality
   fit[,  eval(coefnames):= {res <- drm(log(mfi) ~ concentration, fct=LL.5())$coefficients; as.list(res)}, by="plate,analyte"]
-  fit[, calc_conc:=fivePL_inverse(mfi, b,c,d,e,f)]
+  fit[, calc_conc:=.fivePL_inverse(mfi, b,c,d,e,f)]
   fit[, p100_recov:=calc_conc/concentration*100]
   mfiSet@fit <- data.frame(fit)
   conc_mat <- .get_concentration_matrix(mfiSet)
@@ -382,7 +381,7 @@ slummarize<-function(from,type="MFI"){
 
 .get_concentration_matrix <- function(object){
   fit_dt <- data.table(object@fit)
-  exprs_dt <- data.table(melt_(exprs(object)))
+  exprs_dt <- data.table(melt(exprs(object)))
   pd_dt <- data.table(pData(object))
   setnames(exprs_dt, c("analyte", "sample_id", object@unit))
   setkeyv(fit_dt, c("analyte", "sample_id"))
@@ -393,3 +392,25 @@ slummarize<-function(from,type="MFI"){
   bdt <- bdt[, concentration:=object@inv(MFI, b, c, d, e, f)]
   conc_mat <- acast(bdt, analyte ~ sample_id, value.var="concentration")
 } 
+
+#' Plot Standard curves
+#' 
+#' Wrapper around the geom_sc method for people who don't want to melt and 
+#' ggplot.
+#' 
+#' @param slum A \code{slum} object. The experiment to plot the standard curves.
+#' 
+#' @seealso \code{\link{geom_sc}}
+#' @author Renan Sauteraud
+#' 
+#' @importFrom ggplot2 ggplot aes_string facet_wrap geom_point
+#' @importFrom ggplot2 scale_x_log10 scale_y_log10
+#' @export
+plot_SC <- function(slum){
+  msl <- melt(slum)
+  msl_ss <- subset(msl, tolower(sample_type) == "standard")
+  p <- ggplot(msl_ss, aes_string(color = "plate"), alpha = 0.5) + scale_x_log10() + 
+    scale_y_log10() + facet_wrap(~analyte) + geom_sc(slum) + 
+    geom_point(aes_string(x = "concentration", y = "mfi"))
+  print(p)
+}

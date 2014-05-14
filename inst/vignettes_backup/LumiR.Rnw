@@ -65,7 +65,7 @@ There are 3 mapping files parsed when the data are read into R. These csv files 
 There are three different way of generating these information:
 \begin{itemize}
 \item[	-] User submitted files that respect the expected format of each mapping file.
-\item[	-] Generating the files using \texttt{setup\_template} and manually edit the information before reading.
+\item[	-] Generating the files using \texttt{setup\_templates} and manually edit the information before reading.
 \item[	-] Skipping this step altogether. The reading function will extract as much information as possible from the data. The user will have to edit the R object afterward in order to access the most advanced functions of \texttt{LumiR}.
 \end{itemize}
 

@@ -1,4 +1,34 @@
-#The root of the experiment
+#global variables to pass the NOTE: "no visible binding for global variabl"
+globalVariables(c("plate", "filename", "well", "sample_id", "bid"))
+globalVariables(c("eventno"))
+
+##
+#' Read xMap experiments
+#' 
+#' Creates a blum object from a path storing a Luminex xMap experiment.
+#' 
+#' @param path A \code{character}, the directory containing the data and
+#' mapping files.
+#' 
+#' @details The folder passed in path argument must be structured in a specific 
+#' way and  contain mapping files describing the experiment. See the LumiR user
+#' guide for more information.
+#' 
+#' @return An object of class \code{blum} that is the base structure for this 
+#' package.
+#' 
+#' @author Renan Sauteraud
+#' 
+#' @seealso \code{\link{blum}}
+#'
+#' @export
+#' @import data.table
+#' @importFrom flowCore read.FCS
+#' @importMethodsFrom flowCore exprs
+#' @importFrom tools list_files_with_exts
+#' @importFrom XML xmlTreeParse xmlRoot xmlAttrs xmlSApply xmlValue xmlApply
+#' 
+#' 
 read.experiment<-function(path="./"){
   analyte.file<-list.files(path,pattern="analyte",full.names=TRUE)
   layout.file<-list.files(path,pattern="layout",full.names=TRUE)
@@ -81,6 +111,7 @@ read.experiment<-function(path="./"){
   return(blum)
 }
 
+## READ well IDs
 .getXponentWellsID<-function(filenames){
   filenames<-gsub(".csv", "", filenames, fixed=TRUE)
   #filenames<-unlist(lapply(filenames, function(x)tail(strsplit(x,"/")[[1]],1)))
@@ -126,6 +157,7 @@ read.experiment<-function(path="./"){
   return(exprs)
 }
 
+## READ exprs values
 .read.exprs.xPonent<-function(filenames){
   exprsList<-lapply(filenames, function(x){dt<-fread(x);
                     ss=tail(strsplit(x,"/")[[1]],2)
@@ -140,7 +172,6 @@ read.experiment<-function(path="./"){
   exprs<-.sanitize.exprs(exprs)
   return(exprs)
 }
-
 .read.exprs.lxb<-function(filenames){
   nFiles<-length(filenames)
   wNames<-.getLXBWellsID(filenames)
@@ -182,6 +213,7 @@ read.experiment<-function(path="./"){
   return(exprs)
 }
 
+## READ mapping files
 .read.analyte<-function(analyte.file){
   dt<-fread(analyte.file)
   setnames(dt, names(dt), tolower(names(dt)))
@@ -193,7 +225,6 @@ read.experiment<-function(path="./"){
   }
   return(featureData)
 }
-
 .read.layout<-function(layout.file){
   df<-read.csv(layout.file, header=TRUE)
   colnames(df)<-tolower(colnames(df))
@@ -212,7 +243,6 @@ read.experiment<-function(path="./"){
   
   return(df)
 }
-
 .read.phenotype<-function(path, pheno.file){
   df <-read.csv(pheno.file, colClasses="factor")
   colnames(df)<-tolower(colnames(df))

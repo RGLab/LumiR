@@ -1,0 +1,66 @@
+useDynLib(LumiR)
+
+#drc
+importFrom(drc, drm, LL.5)
+
+#gdata
+importFrom(gdata, read.xls)
+
+#data.table
+import(data.table)
+
+#stats
+importFrom(stats, relevel)
+
+#XML
+importFrom(XML, xmlTreeParse, xmlRoot, xmlAttrs, xmlValue, xmlSApply, xmlApply, xmlSize, xmlName)
+
+#Tools
+importFrom(tools, file_ext, list_files_with_exts)
+
+#multcomp
+importFrom(multcomp, glht)
+
+#flowCore stuff
+importFrom(flowCore, read.FCS)
+importMethodsFrom(flowCore, pData, exprs)
+importClassesFrom(flowCore, flowFrame, flowSet)
+
+# Import stuff from Biobase
+importClassesFrom(Biobase,AnnotatedDataFrame)
+importMethodsFrom(Biobase,pData,featureData,fData,"exprs<-")
+
+# Import from reshape2
+# Melt is an S3 method
+importFrom(reshape2, melt, acast)
+
+
+#grid
+importFrom(grid, unit)
+
+#ggplot2
+importFrom(ggplot2, ggplot, geom_point, geom_line, geom_polygon, aes, aes_string, facet_wrap, facet_grid, 
+labs, element_blank, theme, theme_bw, scale_x_log10, scale_y_log10)
+
+
+######
+######
+exportMethods(
+	"show", "subset",
+	#Getters
+	"pData", "fData", "exprs", "concentration", "fit",
+	#Setters
+	"fData<-", "pData<-", "formula<-","set_center",
+	#Plotting
+	"geom_sc", "plot_layout")
+exportClasses("blum","slum")
+export("read.experiment", "slummarize", "setup_templates", "writeMBAA")
+
+#S3
+S3method(melt, slum)
+S3method(melt, blum)
+export("melt")
+
+
+#dev export
+#exportPattern("^.")

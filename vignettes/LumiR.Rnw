@@ -1,0 +1,220 @@
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{The LumiR users guide}
+%\VignetteDepends{LumiR, knitr}
+%\VignetteKeywords{Luminex multiplex assay analysis}
+%\VignettePackage{LumiR}
+\documentclass[11pt]{article}
+\usepackage{hyperref}
+\usepackage[hmargin=2cm, vmargin=3cm]{geometry}
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(tidy=FALSE)
+@
+
+
+\title{The LumiR User Guide}
+\author{Renan Sauteraud\footnote{rsautera@fhcrc.org}}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+\subsection{Technology}
+Luminex \htmladdnormallink{xMAP}{http://www.luminexcorp.com/TechnologiesScience/xMAPTechnology/} technology is a multiplex assay using flow cytometry to concurrently measure up to 500 analytes in a single reaction volume.
+
+\subsection{LumiR}
+\texttt{LumiR} is an R package that provides data structure and functions to read, store and analyze Luminex xMAP experiment.
+
+As with any R package, it should first be loaded in the session
+<<loading-package, message=FALSE>>=
+library(LumiR)
+@
+
+
+\section{Softwares}
+Even though Luminex is the company delivering the beads, a wide range of \htmladdnormallink{partners}{http://www.luminexcorp.com/Partners/} offer customizable kits and solutions for acquisition and/or analysis of the data. 
+While the technology is identical, the output depends greatly on the software used for the acquisition. In its current version, \texttt{LumiR} can read the data from three different vendors:
+
+\subsection{Luminex}
+Luminex's own acquisition software xPONENT produces one csv file per well. These files contain the raw bead level information: bead id, fluorescence measured as well as the fluorescences used to map the bead. \texttt{LumiR} can read data from xPONENT versions 1.x and 3.x.
+
+\subsection{MiraiBio}
+MiraiBio also developped a set of tools for the acquisition and analysis of Luminex xMAP platform. The acquisition software `MasterPlex CT' currently in version 1.2 creates one file per well. These binary files with a .lxb extension are based on the format FCS 3.0 and contain the bead level information. Along with these files comes a summary in xml format with a .lxd extension. It contains some information regarding the setup used for the experiment, the matching of the bead id with the analyte name and some basic calculations such as the MFI or the bead count in each well for each analyte.
+
+\subsection{BIO-RAD}
+Bio-Plex Manager Software yields files with a proprietary format. However, it allows the user to exports the results in XML files that can be processed by \texttt{LumiR}. The output is a single XML file per experiment gathering all informations available.
+
+
+
+\section{Requirements}
+In order to read the data into R, the package require the data to be organized in a specific file tree. Additional user-provided information is necessary to run most of the functions in this package.
+
+\subsection{Folders architecture}
+Regardless of which software produced the data, the required organization of the folder remains the same. The experiment should be located in a folder (root) with the raw bead level files for each plate in a subfolder named after the plate name or ID. The mapping files should be placed at the root.
+
+\subsection{Bead events extraction}
+Classic analysis methods based on the MFI do not use the bead level fluorescence intensities. Thus, depending on the software this information may not be saved by default. For a more detailed documentation on how to save and extract the bead level information, refer to the other vignettes of this package.
+\begin{itemize}
+\item raw\_data\_xPONENT
+\item raw\_data\_MasterPlex
+\item raw\_data\_BioPlex
+\end{itemize}
+
+\subsection{Mapping files}
+There are 3 mapping files parsed when the data are read into R. These csv files contain information about the samples, the analytes and the layout of the experiment. 
+There are three different way of generating these information:
+\begin{itemize}
+\item[	-] User submitted files that respect the expected format of each mapping file.
+\item[	-] Generating the files using \texttt{setup\_templates} and manually edit the information before reading.
+\item[	-] Skipping this step altogether. The reading function will extract as much information as possible from the data. The user will have to edit the R object afterward in order to access the most advanced functions of \texttt{LumiR}.
+\end{itemize}
+
+\subsubsection{Analyte mapping file}
+In the raw data file, that are not usually exposed to the user, the beads are referenced using numbers or `beadID' (or `bid') instead of the actual analyte name. The number used for an analyte vary depending on the vendor and the kit used.
+
+In order to display the actual analyte name, the package will look for a file `analyte.csv' that will map each ID to a name. It should contain two columns \textbf{analyte} and \textbf{bid}.
+If this file is not submitted by the user, \texttt{LumiR} will still be able to read the data, but the beadID will be displayed instead of the actual analyte name. Data exported from BioPlex are the exception, as the .xml file also contains information regarding the analytes used.
+Alternately, when using MasterPlex CT, the reading function will look for a file with an extension `.lxd' and attempt to extract this information. (More information on this file and how to retrieve it is available in the MasterPlex vignette)
+
+Finally, it is worth noting that in case of a user submitted file, only the analyte listed in the mapping file will be part of the R object. If more analytes are found in the data, they will be discarded and a warning will be thrown. This can be useful in a big multpilex experiment where only a handful of analytes are of interest to the user.
+
+\subsubsection{Phenotype mapping file}
+In the same fashion, \texttt{LumiR} will scan the root folder, looking for a file `phenotype.csv'. This file is where information about the samples should be added. In its minimal form, the file contains four columns \textbf{plate}, \textbf{filename}, \textbf{well} and \textbf{sample\_id}. These are the required information to match a file with a well (sample). The sample\_id is a unique ID based on the other information used to tag a sample in the experiment. 
+Additional, user provided information such as sample\_name, treatment or ptid should be added as new columns.
+
+Here again, if no file is given, this information will be added automatically, based on the folder structure and the filenames.
+
+\subsubsection{Layout mapping file}
+The last mapping file is used to get information about the design of the experiment. In a multiplate experiment, it is assumed that all plates have the same layout, therefore the file only have one line per well (96max).
+Three columns are required: the \textbf{well}, \textbf{sample\_type} (standard/control/background/unknown) and the \textbf{concentration}
+The concentration is the expected concentration of the standards and should be set to `NA' for all other wells, with the exception of the background wells that can be set to either 0 or `NA'.
+Naturally, the information regarding the location and concentration is required for the standard curve fitting.
+
+If no file is provided, each well will be defaulted to the type `unknown' and have `NA' concentration.
+
+In R, this information is merged with the phenotype information.
+
+
+\section{setup\_templates}
+The easiest way to create the three mapping files described above is to use the \texttt{setup\_templates} function. It takes two arguments: a path and a list of the templates to create. The path should be set to the root of the experiment folder. The possible list of templates is `analyte', `phenotype' and `layout'. By default, all templates are selected but if they exists a warning will be thrown and they will not be created.
+
+An analyte and layout mapping file are provided as an example in the exdata folder of this package. The function can be used to create the missing `phenotype.csv'.
+
+<<setup-templates, eval=FALSE>>=
+XP.path<-system.file("extdata", package="LumiR")
+setup_templates(XP.path, templates="phenotype")
+@
+
+As stated previously, this step can be skipped without affecting the reading. However, writing these templates provides an easy way to create mapping file that respect the required format and they can be easily modified prior to the reading.
+
+
+\section{blum}
+The first step is to read the data into R using the function \texttt{read.experiment}. Assuming the folder to read meets all the requirements, the function will automatically detect what software has been used for the acquisition.
+\texttt{read.experiment} returns an object of class \texttt{blum}. This object contains the bead level data and all the information extracted from the mapping files.
+
+
+As an example, we provide two plates of the Listeria Project generated by Ofir Goldberger\footnote{Stanford}, Mark M. Davis\footnotemark[\value{footnote}], John-Demian Sauer\footnote{University of Wisconsin-Madison} and Daniel A. Portnoy\footnote{UC Berkeley}.
+
+
+<<read.experiment-1, echo=TRUE>>=
+XP.path<-system.file("extdata", package="LumiR")
+@
+<<read.experiment-2, eval=FALSE>>=
+bl<-read.experiment(XP.path)
+@
+<<read.experiment-3, echo=FALSE, warning=FALSE>>=
+out<-capture.output(bl<-read.experiment(XP.path))
+@
+<<read.experiment-4, echo=TRUE>>=
+bl
+@
+
+Naturally, \texttt{blum} objects have accessors to the phenotype information (\texttt{pData}), the analytes (\texttt{fData}) and the fluorescence measurements (\texttt{exprs}).
+<<accessors>>=
+head(pData(bl))
+head(fData(bl))
+@
+
+\texttt{LumiR} makes use of the \texttt{ggplot2} package to quickly visualize the design of an experiment. The \texttt{plot\_layout} method can plot phenotype data for the selected plate.
+
+<<plot-layout, fig.height=4>>=
+p<-plot_layout(bl, plate="plate1", fill="sample_type")
+print(p)
+@
+
+
+Here, we use colors to plot the sample\_type for each well of plate1. 
+
+This method uses \texttt{ggplot2}'s \texttt{geom\_polygon} function, therefore, the same arguments are valid here.
+
+
+\section{slum}
+The second step is to summarize the data using \texttt{slummarize}. It returns an object of class \texttt{slum}. It is used for `classic' standardization methods as it only contains the median fluorescence intensity (MFI) for each well and not the raw bead events.
+For this step, the package needs a user provided `layout.csv' file with at least the location and expected concentration of the standards. The file provided in the extdata folder of this package is an example of such file.
+
+<<slummarize, warning=FALSE>>=
+sl<-slummarize(bl)
+@
+
+In the expression slot, the bead events are replaced by the MFI for each analyte/sample. Additionaly, the concentration calculated from each MFI is stored in the object. For a quick view of the concentration of each analyte in each well:
+
+<<access-conc, results="hide">>=
+concentration(sl)
+@
+
+
+Since \texttt{slum} objects retain the phenotype information from the mapping 
+file, they may be used as first argument in \texttt{plot\_layout}.
+
+
+Additionally, \texttt{slummarize} does the standard curve fitting using a 
+5-Parameters Logigistic curve by default. \texttt{LumiR} provides functions and 
+methods to display the curves.
+
+First, \texttt{plot\_SC} is a simple function that will plot the curves for each
+plate and each analyte of a \texttt{slum} object. It does not offer much control
+but is very easy to use.
+<<plot_SC, fig.height=6.5>>=
+plot_SC(sl)
+@
+
+The function is a wrapper around the method \texttt{geom\_sc}. Use the method 
+directly for more customization possibilities. 
+
+<<geom-sc>>=
+library(ggplot2)
+msl<-melt(sl)
+msl.ss<-subset(msl, tolower(sample_type)=="standard")
+p<-ggplot(msl.ss, aes(color=plate), alpha=0.5) + scale_x_log10() + 
+  scale_y_log10() + facet_wrap(~analyte) + geom_sc(sl) + 
+  geom_point(aes(x=concentration, y=mfi)) 
+@
+
+Printing \texttt{p} will result in the same plot as above. Any additional argument 
+to \texttt{geom\_sc} will be passed to the underlying \texttt{ggplot2}'s method 
+\texttt{geom\_line}.
+
+
+\section{output}
+A slum object can be written to a file following \htmladdnormallink{ImmPort}{https://immport.niaid.nih.gov/immportWeb/home/home.do?loginType=full} MBAA (Multiplex Bead Array Assays) format.
+
+First, the name of the organisation producing the data should be added using the \texttt{set\_center} function. On top of adding a column to the phenoData, it will change the sample\_id so that similar experiments run at different locations can be identified.
+
+<<set-center>>=
+sl <- set_center(sl, "FHCRC")
+@
+
+Then, \texttt{writeMBAA} can be used to write a csv or xls file that contains the fields required by ImmPort.
+
+<<writeMBAA, eval=FALSE>>=
+writeMBAA(sl, outfile="./MBAA.results", type="csv")
+@
+
+
+\end{document}

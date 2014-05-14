@@ -115,7 +115,7 @@ logtransfit.group2 <- function( analyte, SB=1, maxIter=5 ) {
     K<-cbind(rep(0,nGrps), diag(1, nGrps, nGrps))
     rownames(K)<-h_names
     #General linear hypothesis multiple comparisons
-    cur_ht<-glht(cur_fit, linfct=K)
+    cur_ht<-glht(cur_fit, linfct=K) #multcomp::glht
     cur_coef<-coef(cur_fit)
     ret[[ctrllvl]]<-list(ht=cur_ht,coef_full=cur_coef,shift=best_shift,ctrllvl=ctrllvl,contrasts='treatment')
   }
