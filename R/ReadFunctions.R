@@ -44,7 +44,7 @@ read.experiment<-function(path="./"){
     missing_templates<-c(missing_templates, "phenotype")
   }
   if(!is.null(missing_templates)){
-    cat(paste(missing_templates, collapse=", "), "mapping file missing.\nSome information may be missing.\n")
+    message(paste(missing_templates, collapse=", "), "mapping file missing.\nSome information may be missing.\n")
     template_list<-setup_templates(path, templates=missing_templates, write=FALSE)
   }
 
@@ -72,6 +72,9 @@ read.experiment<-function(path="./"){
   } else {
     layout<-template_list[["layout"]]
   }
+  ## TODO:
+  # in setup_templates: run one .getBioplexLayout per plate file
+  # merge(phenodata,layout,by=c("well", "plate"))
   phenoData <- merge(phenotype, layout, by="well")
   rownames(phenoData) <- phenoData$sample_id
 
@@ -140,10 +143,10 @@ read.experiment<-function(path="./"){
 }
 
 .sanitize.exprs<-function(exprs){
-  setnames(exprs,names(exprs),tolower(names(exprs)))
-  bidGrep<-"id"
-  bIdx<-grep(bidGrep, names(exprs))
-  name<-names(exprs)  
+  setnames(exprs, tolower(names(exprs)))
+  bidGrep <- "id"
+  bIdx <- grep(bidGrep, names(exprs))
+  name <- names(exprs)  
   name[bIdx]<-"bid"
   setnames(exprs, name)
   # Remove the eventno
@@ -159,15 +162,15 @@ read.experiment<-function(path="./"){
 
 ## READ exprs values
 .read.exprs.xPonent<-function(filenames){
-  exprsList<-lapply(filenames, function(x){dt<-fread(x);
-                    ss=tail(strsplit(x,"/")[[1]],2)
-                    fname=ss[2]  # Get plate & fname now for the merge with sample_ID
-                    plate=ss[1]
-                    wname=.getXponentWellsID(fname)
-                    dt[,c("plate","filename","well"):=list(plate,fname,wname)]
-                    })
+  exprsList<-lapply(filenames, function(x){
+      dt <- fread(x)
+      ss=tail(strsplit(x,"/")[[1]],2)
+      fname=ss[2]  # Get plate & fname now for the merge with sample_ID
+      plate=ss[1]
+      wname=.getXponentWellsID(fname)
+      dt[,c("plate","filename","well"):=list(plate,fname,wname)]
+    })
   ## rbind all data.tables
-  ## The code could be improve when fread supports specifying the type for different columns
   exprs<-rbindlist(exprsList)
   exprs<-.sanitize.exprs(exprs)
   return(exprs)
@@ -178,12 +181,12 @@ read.experiment<-function(path="./"){
   exprsList<-vector('list', nFiles)
   for(fileIdx in 1:nFiles){
     suppressWarnings(lxb<-read.FCS(filenames[[fileIdx]]))
-    ss<-tail(strsplit(filenames[[fileIdx]],"/")[[1]],2)
-    fname<-ss[2]  # Get plate & fname now for the merge with sample_ID
-    plate<-ss[1]
-    asdt<-as.data.table(exprs(lxb))
-    asdt[,c("plate","filename","well"):=list(plate,fname,wNames[fileIdx])]
-    exprsList[[fileIdx]]<-asdt
+    ss <- tail(strsplit(filenames[[fileIdx]],"/")[[1]],2)
+    fname <- ss[2]  # Get plate & fname now for the merge with sample_ID
+    plate <- ss[1]
+    asdt <- as.data.table(exprs(lxb))
+    asdt[, c("plate","filename","well") := list(plate,fname,wNames[fileIdx])]
+    exprsList[[fileIdx]] <- asdt
   }
   exprs<-rbindlist(exprsList)
   exprs<-.sanitize.exprs(exprs)

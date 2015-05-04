@@ -35,11 +35,11 @@
 #' @importFrom tools list_files_with_exts
 #' 
 setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), write=TRUE){
-  dfList<-list()
-  analyte.file<-list.files(path,pattern="analyte",full.names=TRUE)
-  layout.file<-list.files(path,pattern="layout",full.names=TRUE)
-  pheno.file<-list.files(path,pattern="phenotype",full.names=TRUE)
-  plates<-list.dirs(path, recursive=FALSE)
+  dfList <- list()
+  analyte.file <- list.files(path, pattern = "analyte", full.names = TRUE)
+  layout.file  <- list.files(path, pattern = "layout", full.names = TRUE)
+  pheno.file   <- list.files(path, pattern = "phenotype", full.names = TRUE)
+  plates <- list.dirs(path, recursive = FALSE)
 
   if(length(list_files_with_exts(plates[1], exts="lxb")>0)){
     type<-"LXB"; typeExt<-"lxb";
@@ -121,7 +121,7 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
           lxdFile<-list_files_with_exts(path, exts="lxd")
           analyte.df<-.read.lxd(lxdFile[1])
       } else if(type=="BIOPLEX"){
-        analyte.df<-.getBioplexAnalytes(all.files[1])
+        analyte.df <- .getBioplexAnalytes(all.files[1])
       } else{
         if(type=="XPONENT"){
           BIDs<-.getXponentBID(all.files[1])
@@ -206,7 +206,13 @@ setup_templates<-function(path, templates=c("layout", "analyte", "phenotype"), w
   xml <- xmlTreeParse(fName)
   root <- xmlRoot(xml)
   node <- root[["Samples"]]
-  sample_type <- tolower(unlist(xmlSApply(node, names)))
+  #sample_type <- tolower(unlist(xmlSApply(node, names)))
+  mw <- xmlSApply(node, function(x){ xmlSApply(x,
+                        function(xxx){ length(xxx[["MemberWells"]])
+                  })})
+  rep <- unlist(mw, recursive = TRUE, use.names = FALSE)
+  nm <- unlist(sapply(mw, names), use.names = FALSE)
+  sample_type <- rep(nm, rep)
   exp_concs <- unlist(xmlSApply(node, function(x){ xmlSApply(x,
                                       function(xx){ as.numeric(xmlValue(xx[["Analytes"]][[1]][["ExpectedConc"]])) })}))
   rep_cnt <- unlist(xmlSApply(node, function(x){ xmlSApply(x, 

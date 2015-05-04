@@ -7,7 +7,6 @@ and advanced bead-level analyses.
 # TODO
 
 1. Does layout really have to be the same (e.g: not enough samples to fill last plate)
-2. Check nCal to decide if we discard low and/or high mfis
 4. Add checks for concentration units in xml files
 5. Allow one .lxd per plate. ->extract more info than just the analytes
 6. Find other source for data (extdata is too big)
