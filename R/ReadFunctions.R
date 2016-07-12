@@ -29,11 +29,11 @@ globalVariables(c("eventno"))
 #' @importFrom XML xmlTreeParse xmlRoot xmlAttrs xmlSApply xmlValue xmlApply
 #' 
 #' 
-read.experiment<-function(path="./"){
-  analyte.file<-list.files(path,pattern="analyte",full.names=TRUE)
-  layout.file<-list.files(path,pattern="layout",full.names=TRUE)
-  pheno.file<-list.files(path,pattern="phenotype",full.names=TRUE)
-  missing_templates<-c()
+read.experiment <- function(path = "./"){
+  analyte.file <- list.files(path, pattern = "analyte", full.names = TRUE)
+  layout.file  <- list.files(path, pattern = "layout", full.names = TRUE)
+  pheno.file   <- list.files(path, pattern = "phenotype", full.names = TRUE)
+  missing_templates <- c()
   if(length(analyte.file)==0){
     missing_templates<-c(missing_templates, "analyte")
   }
@@ -44,7 +44,7 @@ read.experiment<-function(path="./"){
     missing_templates<-c(missing_templates, "phenotype")
   }
   if(!is.null(missing_templates)){
-    message(paste(missing_templates, collapse=", "), "mapping file missing.\nSome information may be missing.\n")
+    message(paste(missing_templates, collapse=", "), " mapping file missing.\nSome information may be missing.\n")
     template_list<-setup_templates(path, templates=missing_templates, write=FALSE)
   }
 
@@ -119,7 +119,7 @@ read.experiment<-function(path="./"){
   filenames<-gsub(".csv", "", filenames, fixed=TRUE)
   #filenames<-unlist(lapply(filenames, function(x)tail(strsplit(x,"/")[[1]],1)))
   filenames<-basename(filenames)
-  if(length(grep("Run", filenames))==0){#XPONENT v3.
+  if(length(grep("^Run", filenames))==0){#XPONENT v3.
     wellsID<-unlist(lapply(strsplit(filenames, split="_"), tail, 1))
   } else{#XPONENT v1.
     wellsNo<-as.numeric(gsub("Run", "", filenames))

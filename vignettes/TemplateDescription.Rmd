@@ -1,0 +1,14 @@
+---
+title: "TemplatesDescription"
+output: html_document
+---
+
+
+## Phenodata
+plate: Folder name
+filename
+well: A1-H12
+sample_id: filename - plate - well
+sample_name: optional user defined names
+sample_type: standard / control / background / unknown
+concentration: expected concentration (valid only for standard wells)
