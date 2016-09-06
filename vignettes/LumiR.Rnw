@@ -9,7 +9,7 @@
 
 <<include=FALSE>>=
 library(knitr)
-opts_chunk$set(tidy=FALSE)
+opts_chunk$set(tidy=FALSE, warning = FALSE)
 @
 
 
@@ -17,6 +17,7 @@ opts_chunk$set(tidy=FALSE)
 \author{Renan Sauteraud\footnote{rsautera@fhcrc.org}}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 \maketitle
 
